@@ -30,7 +30,38 @@ void Universe::addObject(double x, double y, double z,
 
 void Universe::addTime(double timestep) {
 
-    updateForces();
+    std::list<Body>::iterator it1, it2;
+
+	//Merge objects that are near one another
+	bool noMerges = false;
+	while(!noMerges) {
+		noMerges = true;
+		for(it1 = objList.begin(); it1 != objList.end(); ++it1) {
+			for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
+				if(it1 != it2) {
+					if(computeDistance(*it1,*it2) < (*it1).radius + (*it2).radius) {
+						objList.push_back(mergeBodies(*it1,*it2));
+						objList.erase(it1);
+						objList.erase(it2);
+						noMerges = false;
+						break;
+					}
+				}
+			}
+			if(!noMerges) break;
+		}
+	}
+
+	
+
+    //Compute forces
+    for(it1 = objList.begin(); it1 != objList.end(); ++it1) {
+        for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
+			if(it1 != it2) {
+				(*it1).computeForce(*it2, timestep);
+			}
+        }
+    }
 
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
@@ -56,11 +87,11 @@ double Universe::computeDistance(Body a, Body b) {
 
 Body Universe::mergeBodies(Body a, Body b) {
 
-    double x = (a.Xpos + b.Xpos) / 2.0;
-    double y = (a.Ypos + b.Ypos) / 2.0;
-    double z = (a.Zpos + b.Zpos) / 2.0;
+	double m = a.mass + b.mass;
 
-    double m = a.mass + b.mass;
+	double x = (a.mass*a.Xpos + b.mass*b.Xpos)/m;
+    double y = (a.mass*a.Ypos + b.mass*b.Ypos)/m;
+    double z = (a.mass*a.Zpos + b.mass*b.Zpos)/m;
 
     double dx = (a.mass*a.dXpos + b.mass*b.dXpos)/m;
     double dy = (a.mass*a.dYpos + b.mass*b.dYpos)/m;
@@ -69,46 +100,11 @@ Body Universe::mergeBodies(Body a, Body b) {
     return Body(x,y,z,dx,dy,dz,m);
 }
 
-void Universe::updateForces() {
-
-	std::list<Body>::iterator it1, it2;
-
-	//Merge objects that are near one another
-	bool noMerges = false;
-	while(!noMerges) {
-		noMerges = true;
-		for(it1 = objList.begin(); it1 != objList.end(); ++it1) {
-			for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
-				if(it1 != it2) {
-					if(computeDistance(*it1,*it2) < 0.5) {
-						objList.push_back(mergeBodies(*it1,*it2));
-						objList.erase(it1);
-						objList.erase(it2);
-						noMerges = false;
-						break;
-					}
-				}
-			}
-			if(!noMerges) break;
-		}
-	}
-
-    //Compute forces
-    for(it1 = objList.begin(); it1 != objList.end(); ++it1) {
-        for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
-			if(it1 != it2) {
-				(*it1).computeForce(*it2);
-			}
-        }
-    }
-}
-
 void Universe::draw() {
 
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
         (*it).draw();
-        //objList[i].drawHistory();
     }
 }
 

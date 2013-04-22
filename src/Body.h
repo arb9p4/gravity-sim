@@ -38,8 +38,10 @@ double dXrot, dYrot, dZrot; //Rotation
 //Mass of the body
 double mass;
 
+double radius;
+
 //History trail
-std::deque<Point> trail;
+//std::deque<Point> trail;
 
 //Constructor to place a body at a random location
 Body();
@@ -60,7 +62,7 @@ void stop();
 void randVelocity();
 
 //Updates the velocity to reflect the force from another body
-void computeForce(Body b);
+void computeForce(Body b, double timestep);
 
 //Draws the body
 void draw();
@@ -68,5 +70,5 @@ void draw();
 virtual void drawShape();
 
 //Draws the history trail
-void drawHistory();
+//void drawHistory();
 };

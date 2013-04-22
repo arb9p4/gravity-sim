@@ -49,15 +49,15 @@ class GravitySimApp {
 	static void addOrbit(Fl_Widget *w, void *data) {
         GravitySimApp *o = (GravitySimApp*)data;
         o->view->theUniverse.addObject(0,0,0,0,0,0,10);
-        o->view->theUniverse.addObject(5,0,0,0,0,3,1);
+        o->view->theUniverse.addObject(10,0,0,0,0,0.25,1);
     }
 
     static void addDisk(Fl_Widget *w, void *data) {
         GravitySimApp *o = (GravitySimApp*)data;
 
-        double speed = 1;
+        double speed = 0.3;
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 100; i++) {
             double angle = ((double)rand()/(double)RAND_MAX)*2*PI;
             double radius = ((double)rand()/(double)RAND_MAX)*3+10;
             double x = radius*cos(angle);

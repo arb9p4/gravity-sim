@@ -35,8 +35,6 @@ double computeDistance(Body a, Body b);
 
 Body mergeBodies(Body a, Body b);
 
-void updateForces();
-
 void draw();
 
 void clear();

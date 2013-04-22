@@ -48,7 +48,7 @@ void animate(void* pData) {
         pWindow->camZ += dZ*cos(PI_180*pWindow->rotY) + dX*sin(PI_180*pWindow->rotY);
 
 
-        pWindow->theUniverse.addTime(1.0/30.0);
+        pWindow->theUniverse.addTime(pWindow->timestep);
 
 
         //Redraw and reset timer
@@ -150,6 +150,10 @@ void GlWindow::draw() {
 		currentLine += lineHeight;
 		sprintf(buffer, "# of Objects: %i", theUniverse.objList.size());
 		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "Simulation Speed: %.3f", timestep);
+		printString(2, currentLine, buffer);
 	}
 
 	glFlush();
@@ -201,6 +205,16 @@ int GlWindow::handle(int Fl_event) {
 		shiftKey = (Fl::event_shift() > 0) ? 1 : 0;
 
 		switch(Fl::event_key()) {
+		case FL_F+1:
+			//Decrease simulation speed
+			timestep *= 0.8;
+			return 1;
+
+		case FL_F+2:
+			//Increase simulation speed
+			timestep *= 1.25;
+			return 1;
+		
 		case FL_F+3:
             //Toggle info overlay
 			showInfo = !showInfo;
@@ -389,18 +403,18 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 
     //Initialize camera position
 	camX = 0.0;
-	camY = -0.5;
-	camZ = -3.0;
+	camY = -20.0;
+	camZ = -15.0;
 
     //Initialize camera rotation
-	rotX = 0.0;
+	rotX = 60.0;
 	rotY = 0.0;
 	rotZ = 0.0;
 
     //Initialize clipping planes
 	fov = 60.0;
 	nearClip = 0.1;
-	farClip = 50.0;
+	farClip = 1000000.0;
 
     //Initialize key variables
 	keyW = keyS = keyA = keyD = keyR = keyF = 0;
@@ -413,6 +427,8 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
     //Initialize mouse position
     mouseX = mouseY = 0.0;
 	mouseX2 = mouseY2 = 0.0;
+
+	timestep = 1.0/30.0;
 
     //Initialize other variables
 	showInfo = true;

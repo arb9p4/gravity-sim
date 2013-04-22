@@ -59,6 +59,8 @@ public:
     double mouseX, mouseY;		//Current position
     double mouseX2, mouseY2;	//Last position
 
+	double timestep;
+
     /*
     int moveMode;	//Moving camera or object
 

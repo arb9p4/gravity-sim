@@ -32,6 +32,9 @@ Body::Body() {
 
     mass = 1.0;
 
+	//Compute radius
+    radius = pow(3*mass/(4*PI),0.33333);
+
     stop();
 
     //theAsteroid = Asteroid();
@@ -49,6 +52,9 @@ Body::Body(double x, double y, double z) {
     Zrot = 0.0;
 
     mass = 1.0;
+
+	//Compute radius
+    radius = pow(3*mass/(4*PI),0.33333);
 
     stop();
 
@@ -70,6 +76,9 @@ Body::Body(double x, double y, double z,
     Zrot = 0.0;
 
     mass = m;
+
+	//Compute radius
+    radius = pow(3*mass/(4*PI),0.33333);
 
     stop();
 
@@ -99,7 +108,7 @@ void Body::randVelocity() {
 }
 
 //Updates the velocity to reflect the force from another body
-void Body::computeForce(Body b) {
+void Body::computeForce(Body b, double timestep) {
 
     double eps = 0.0001;
 	double G = 0.1;
@@ -113,9 +122,9 @@ void Body::computeForce(Body b) {
 
 	double force = -G*b.mass/(dist2 + eps);
 
-	dXpos += force*dX/(dist + eps);
-	dYpos += force*dY/(dist + eps);
-	dZpos += force*dZ/(dist + eps);
+	dXpos += timestep*force*dX/(dist + eps);
+	dYpos += timestep*force*dY/(dist + eps);
+	dZpos += timestep*force*dZ/(dist + eps);
 }
 
 //Draws the body
@@ -124,7 +133,7 @@ void Body::draw() {
     //Save current transformation
     glPushMatrix();
 
-    drawHistory();
+    //drawHistory();
 
 	//Move object
     glTranslatef(Xpos, Ypos, Zpos);
@@ -145,15 +154,12 @@ void Body::draw() {
 }
 
 void Body::drawShape() {
-
-    //Compute radius
-    double r = pow(3*mass/(4*PI),0.33333);
-
     glColor3f(1.0, 1.0, 1.0);
 	glRotatef(90.0, 1.0, 0.0, 0.0);
-    glutWireSphere(r, 20, 16);
+    glutWireSphere(radius, 20, 16);
 }
 
+/*
 //Draws the history trail
 void Body::drawHistory() {
 
@@ -177,3 +183,4 @@ void Body::drawHistory() {
     glEnd();
 
 }
+*/
