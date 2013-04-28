@@ -1,3 +1,6 @@
+#ifndef ASTEROID_H
+#define ASTEROID_H
+
 #include <FL/glu.h>
 #include <FL/glut.H>
 #include <vector>
@@ -107,3 +110,5 @@ void draw() {
 }
 
 };
+
+#endif

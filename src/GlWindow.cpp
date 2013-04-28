@@ -27,36 +27,48 @@ void animate(void* pData) {
         pWindow->mouseX2 = pWindow->mouseX;
         pWindow->mouseY2 = pWindow->mouseY;
 
-        //Update clipping planes
-		pWindow->fov += pWindow->fovSensitivity*pWindow->keyMinus - pWindow->fovSensitivity*pWindow->keyPlus;
-		pWindow->nearClip *= (1 + pWindow->clipSensitivity*pWindow->keyRBracket*pWindow->shiftKey -
+		// clipping variables
+		double fov = pWindow->fovSensitivity*pWindow->keyMinus - pWindow->fovSensitivity*pWindow->keyPlus;
+		double nearClip = (1 + pWindow->clipSensitivity*pWindow->keyRBracket*pWindow->shiftKey -
 								  pWindow->clipSensitivity*pWindow->keyLBracket*pWindow->shiftKey);
-		pWindow->farClip *= (1 + pWindow->clipSensitivity*pWindow->keyRBracket*(1 - pWindow->shiftKey) -
+		double farClip = (1 + pWindow->clipSensitivity*pWindow->keyRBracket*(1 - pWindow->shiftKey) -
 								 pWindow->clipSensitivity*pWindow->keyLBracket*(1 - pWindow->shiftKey));
 
-        //Update camera rotation
-        pWindow->rotX += pWindow->rotSpeed*pWindow->keyX - pWindow->rotSpeed*pWindow->keyC + mY*pWindow->mouseSensitivity;
-        pWindow->rotY += pWindow->rotSpeed*pWindow->keyV - pWindow->rotSpeed*pWindow->keyZ + mX*pWindow->mouseSensitivity;
-        pWindow->rotZ += pWindow->rotSpeed*pWindow->keyE - pWindow->rotSpeed*pWindow->keyQ;
+        // rotation variables
+		double rotX = pWindow->rotSpeed*pWindow->keyX - pWindow->rotSpeed*pWindow->keyC + mY*pWindow->mouseSensitivity;
+		double rotY = pWindow->rotSpeed*pWindow->keyV - pWindow->rotSpeed*pWindow->keyZ + mX*pWindow->mouseSensitivity;
+		double rotZ = pWindow->rotSpeed*pWindow->keyE - pWindow->rotSpeed*pWindow->keyQ;
 
-        //Update camera translation
+        // translation variables
         double dX = pWindow->moveSpeed*pWindow->keyA - pWindow->moveSpeed*pWindow->keyD;
         double dY = pWindow->moveSpeed*pWindow->keyF - pWindow->moveSpeed*pWindow->keyR;
         double dZ = pWindow->moveSpeed*pWindow->keyW - pWindow->moveSpeed*pWindow->keyS;
-        pWindow->camX += dX*cos(PI_180*pWindow->rotY) - dZ*sin(PI_180*pWindow->rotY);
-        pWindow->camY += dY + dZ*sin(PI_180*pWindow->rotX);
-        pWindow->camZ += dZ*cos(PI_180*pWindow->rotY) + dX*sin(PI_180*pWindow->rotY);
-
+		double camX = dX*cos(PI_180*pWindow->cam1.rotY) - dZ*sin(PI_180*pWindow->cam1.rotY);
+		double camY = dY + dZ*sin(PI_180*pWindow->cam1.rotX);
+		double camZ = dZ*cos(PI_180*pWindow->cam1.rotY) + dX*sin(PI_180*pWindow->cam1.rotY);
+		
+		//Update clipping planes
+		pWindow->cam1.updateClipping(fov, nearClip, farClip);
+		//Update camera translation
+		pWindow->cam1.updateTranslation(camX, camY, camZ);
+		//Update camera rotation
+		pWindow->cam1.updateRotation(rotX, rotY, rotZ);
 
         pWindow->theUniverse.addTime(pWindow->timestep);
 
+		// simple check to see if there is a planet, then follows the first planet in the list.
+		if (pWindow->theUniverse.objList.size() > 0) {
+			pWindow->cam2.camX = pWindow->theUniverse.objList.front().Xpos;
+			pWindow->cam2.camY = pWindow->theUniverse.objList.front().Ypos;
+			pWindow->cam2.camZ = pWindow->theUniverse.objList.front().Zpos;
+			
+		}
 
         //Redraw and reset timer
 		pWindow->redraw();
 		Fl::repeat_timeout(1.0/30.0, animate, pWindow);
 	}
 }
-
 
 //Initialize window
 //Do this on init or when window's size is changed
@@ -76,29 +88,35 @@ void GlWindow::initialize(int W,int H) {
 	glDisable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
+	
 }
 
-//Draw method
-void GlWindow::draw() {
-	if (!valid()) { valid(1); initialize(w(), h()); }      // first time? init
-
-    //Clear screen
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+// split out drawing function so that you could draw multiple cameras,
+// then specifiy lookAt = true to follow a planet.
+void GlWindow::displayMe(Camera camNew, bool lookAt) {
+	
     //Initialize projection matrix
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(fov, double(w())/double(h()), nearClip, farClip);
+	gluPerspective(camNew.fov, double(w())/double(h()), camNew.nearClip, camNew.farClip);
+	
 
     //Initialize modelview matrix
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	//Move camera
-    glRotatef(rotZ, 0.0, 0.0, 1.0);
-    glRotatef(rotX, 1.0, 0.0, 0.0);
-    glRotatef(rotY, 0.0, 1.0, 0.0);
-    glTranslatef(camX, camY, camZ);
+	if (lookAt) {
+		gluLookAt(
+			cam2.camX, cam2.camY, cam2.camZ+5.0, 
+			cam2.camX, cam2.camY, cam2.camZ, 
+			0, 1, 0);
+	} else {
+		//Move camera
+		glRotatef(camNew.rotZ, 0.0, 0.0, 1.0);
+		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
+		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
+		glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
+	}
 
     //Draw grid
     glColor3f(0.3, 0.3, 0.4);
@@ -117,7 +135,7 @@ void GlWindow::draw() {
 	theUniverse.draw();
 
 	//Display info on screen
-	if(showInfo) {
+	if(showInfo && !lookAt) {
 
 		//Prepare camera for text overlay
 		glMatrixMode(GL_PROJECTION);
@@ -136,15 +154,15 @@ void GlWindow::draw() {
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
-		sprintf(buffer, "X: %.2f   Y: %.2f   Z: %.2f", -camX, -camY, -camZ);
+		sprintf(buffer, "X: %.2f   Y: %.2f   Z: %.2f", -cam1.camX, -cam1.camY, -cam1.camZ);
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
-		sprintf(buffer, "Yaw: %.2f   Pitch: %.2f   Roll: %.2f", rotY, -rotX, rotZ);
+		sprintf(buffer, "Yaw: %.2f   Pitch: %.2f   Roll: %.2f", cam1.rotY, -cam1.rotX, cam1.rotZ);
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
-		sprintf(buffer, "FOV: %.2f   Near: %.2f   Far: %.2f", fov, nearClip, farClip);
+		sprintf(buffer, "FOV: %.2f   Near: %.2f   Far: %.2f", cam1.fov, cam1.nearClip, cam1.farClip);
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
@@ -155,6 +173,26 @@ void GlWindow::draw() {
 		sprintf(buffer, "Simulation Speed: %.3f", timestep);
 		printString(2, currentLine, buffer);
 	}
+}
+
+//Draw method
+void GlWindow::draw() {
+	if (!valid()) { valid(1); initialize(w(), h()); }      // first time? init
+	//Clear screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// draw original scene on whole screen
+	glViewport(0,0,w(), h());
+    GlWindow::displayMe(cam1, false);
+
+	// draw second scene in the top right corner
+	glViewport(w()/2, h()/2, w()/2, h()/2);
+	// used so I could clear only the top right of the screen
+	glEnable(GL_SCISSOR_TEST);
+	glScissor(w()/2, h()/2, w()/2, h()/2);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	GlWindow::displayMe(cam2, true);
+	glDisable(GL_SCISSOR_TEST);
 
 	glFlush();
 
@@ -400,21 +438,6 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	mouseSensitivity = 0.25;
 	fovSensitivity = 1.0;
 	clipSensitivity = 0.05;
-
-    //Initialize camera position
-	camX = 0.0;
-	camY = -20.0;
-	camZ = -15.0;
-
-    //Initialize camera rotation
-	rotX = 60.0;
-	rotY = 0.0;
-	rotZ = 0.0;
-
-    //Initialize clipping planes
-	fov = 60.0;
-	nearClip = 0.1;
-	farClip = 1000000.0;
 
     //Initialize key variables
 	keyW = keyS = keyA = keyD = keyR = keyF = 0;

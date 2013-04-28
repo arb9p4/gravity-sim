@@ -11,6 +11,10 @@
  *	Copyright University of Missouri-Columbia
  */
 
+#ifndef BODY_H
+#define BODY_H
+
+
 #include <deque>
 //#include "Asteroid.h"
 
@@ -72,3 +76,4 @@ virtual void drawShape();
 //Draws the history trail
 //void drawHistory();
 };
+#endif

@@ -10,9 +10,14 @@
  *	Copyright University of Missouri-Columbia
  */
 
+#ifndef UNIVERSE_H
+#define UNIVERSE_H
+
 #include <list>
 //#include <vector>
 #include "Body.h"
+
+
 
 class Universe {
 public:
@@ -40,3 +45,5 @@ void draw();
 void clear();
 
 };
+
+#endif

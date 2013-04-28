@@ -9,6 +9,8 @@
  *
  *	Copyright University of Missouri-Columbia
  */
+#ifndef GLWINDOW_H
+#define GLWINDOW_H
 
 #include <FL/glu.h>
 #include <FL/glut.H>
@@ -17,6 +19,8 @@
 #include <cmath>
 
 #include "Universe.h"
+#include "Camera.h"
+
 
 //OpenGL Window Class
 class GlWindow : public Fl_Gl_Window {
@@ -36,16 +40,13 @@ class GlWindow : public Fl_Gl_Window {
 	//Handle events
 	int handle(int Fl_event);
 
+	void displayMe(Camera, bool);
+
 public:
 
 	//Control sensitivity parameters
 	double moveSpeed, rotSpeed, scaleSpeed;
 	double mouseSensitivity, fovSensitivity, clipSensitivity;
-
-	//Camera parameters
-	double camX, camY, camZ;
-	double rotX, rotY, rotZ;
-	double fov, nearClip, farClip;
 
 	//Key variables
 	int keyW, keyS, keyA, keyD, keyR, keyF; //Translation keys
@@ -58,6 +59,10 @@ public:
 	//Mouse position
     double mouseX, mouseY;		//Current position
     double mouseX2, mouseY2;	//Last position
+
+	//Camera parameters
+	Camera cam1;
+	Camera cam2;
 
 	double timestep;
 
@@ -86,3 +91,5 @@ public:
 	//Called on close to ensure that the help dialog is also closed
 	void hide();
 };
+
+#endif
