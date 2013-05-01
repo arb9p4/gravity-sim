@@ -59,6 +59,7 @@ public:
 	//Mouse position
     double mouseX, mouseY;		//Current position
     double mouseX2, mouseY2;	//Last position
+	bool secWin;
 
 	//Camera parameters
 	Camera cam1;

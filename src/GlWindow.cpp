@@ -11,6 +11,8 @@
  */
 
 #include "GlWindow.h"
+#include <iostream>
+using namespace std;
 
 #define PI_180 0.01745329251994329576923690768489
 
@@ -52,7 +54,11 @@ void animate(void* pData) {
 		//Update camera translation
 		pWindow->cam1.updateTranslation(camX, camY, camZ);
 		//Update camera rotation
-		pWindow->cam1.updateRotation(rotX, rotY, rotZ);
+		if (pWindow->secWin) {
+			pWindow->cam2.updateRotation(rotX, rotY, rotZ);
+		} else {
+			pWindow->cam1.updateRotation(rotX, rotY, rotZ);
+		}
 
         pWindow->theUniverse.addTime(pWindow->timestep);
 
@@ -61,8 +67,10 @@ void animate(void* pData) {
 			pWindow->cam2.camX = pWindow->theUniverse.objList.front().Xpos;
 			pWindow->cam2.camY = pWindow->theUniverse.objList.front().Ypos;
 			pWindow->cam2.camZ = pWindow->theUniverse.objList.front().Zpos;
-			
 		}
+
+		// debug statements
+		cout << "rotX = " << rotX << ", rotY = " << rotY << ", rotZ = " << rotZ << endl;
 
         //Redraw and reset timer
 		pWindow->redraw();
@@ -106,10 +114,20 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 	glLoadIdentity();
 
 	if (lookAt) {
+		// TODO fix this
 		gluLookAt(
 			cam2.camX, cam2.camY, cam2.camZ+5.0, 
 			cam2.camX, cam2.camY, cam2.camZ, 
 			0, 1, 0);
+		glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
+		//glRotatef(camNew.rotZ, 0.0, 0.0, 1.0);
+		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
+		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
+		
+		glTranslatef(-cam2.camX, -cam2.camY, -cam2.camZ);
+			
+			//glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
+		
 	} else {
 		//Move camera
 		glRotatef(camNew.rotZ, 0.0, 0.0, 1.0);
@@ -236,7 +254,14 @@ int GlWindow::handle(int Fl_event) {
         mouseY = Fl::event_y();
         mouseX2 = mouseX;
         mouseY2 = mouseY;
+		if (mouseX > w()/2 && mouseY < h()/2 && !secWin) {
+			secWin = true;
+		}
         return 1;
+
+	case FL_RELEASE:
+		secWin = false;
+		return 1;
 
     //Handle key events
 	case FL_KEYDOWN:
