@@ -42,7 +42,11 @@ void Universe::addTime(double timestep) {
 			for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
 				if(it1 != it2) {
 					if(computeDistance(*it1,*it2) < (*it1).radius + (*it2).radius) {
-						objList.push_back(mergeBodies(*it1,*it2));
+						if (it1 == objList.begin()) {
+							objList.push_front(mergeBodies(*it1,*it2));
+						} else {
+							objList.push_back(mergeBodies(*it1,*it2));
+						}
 						objList.erase(it1);
 						objList.erase(it2);
 						noMerges = false;

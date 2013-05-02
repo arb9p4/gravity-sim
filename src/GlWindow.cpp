@@ -70,7 +70,7 @@ void animate(void* pData) {
 		}
 
 		// debug statements
-		cout << "rotX = " << rotX << ", rotY = " << rotY << ", rotZ = " << rotZ << endl;
+		//cout << "rotX = " << rotX << ", rotY = " << rotY << ", rotZ = " << rotZ << endl;
 
         //Redraw and reset timer
 		pWindow->redraw();
