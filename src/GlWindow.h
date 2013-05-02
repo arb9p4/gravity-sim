@@ -60,6 +60,11 @@ public:
     double mouseX, mouseY;		//Current position
     double mouseX2, mouseY2;	//Last position
 	bool secWin;
+	double clickX, clickY;		//Clicked point
+	double clickX2, clickY2;		//Clicked point
+	int mouseButton;			//Which mouse button was last clicked
+	int addObj;					//0: not adding; 1: clicked; 2: released
+
 
 	//Camera parameters
 	Camera cam1;
@@ -77,6 +82,7 @@ public:
     Universe theUniverse;
 
 	bool showInfo;	//Display diagnostic information on the screen
+	bool showGrid;	//Display the grid
 
 	//Help window objects
 	Fl_Window *helpWindow;

@@ -136,21 +136,95 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
 	}
 
+	
+
     //Draw grid
-    glColor3f(0.3, 0.3, 0.4);
-    glBegin(GL_LINES);
-    for(GLfloat i = -100.0; i <= 100.0; ++i) {
-        glVertex3f(i, 0.0, -100.0);
-        glVertex3f(i, 0.0, 100.0);
-    }
-    for(GLfloat i = -100.0; i <= 100.0; ++i) {
-        glVertex3f(-100.0, 0.0, i);
-        glVertex3f(100.0, 0.0, i);
-    }
-    glEnd();
+	if(showGrid) {
+		glColor3f(0.3, 0.3, 0.4);
+		glBegin(GL_LINES);
+		for(GLfloat i = -100.0; i <= 100.0; ++i) {
+			glVertex3f(i, 0.0, -100.0);
+			glVertex3f(i, 0.0, 100.0);
+		}
+		for(GLfloat i = -100.0; i <= 100.0; ++i) {
+			glVertex3f(-100.0, 0.0, i);
+			glVertex3f(100.0, 0.0, i);
+		}
+		glEnd();
+
+		
+	}
+
 
 	//Draw objects
 	theUniverse.draw();
+
+	if(showGrid)
+		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
+	else
+		glColor4f(0.3, 0.3, 0.4, 0.0);	//Make selection plane completely invisible
+
+	glBegin(GL_QUADS);
+		glVertex3f(-100, 0, -100);
+		glVertex3f(-100, 0, 100);
+		glVertex3f(100, 0, 100);
+		glVertex3f(100, 0, -100);
+	glEnd();
+
+	if(addObj > 0) {
+
+		GLint viewport[4];                  // Where The Viewport Values Will Be Stored
+		glGetIntegerv(GL_VIEWPORT, viewport);           // Retrieves The Viewport Values (X, Y, Width, Height)
+
+		GLdouble modelview[16];                 // Where The 16 Doubles Of The Modelview Matrix Are To Be Stored
+		glGetDoublev(GL_MODELVIEW_MATRIX, modelview);       // Retrieve The Modelview Matrix
+
+		GLdouble projection[16];                // Where The 16 Doubles Of The Projection Matrix Are To Be Stored
+		glGetDoublev(GL_PROJECTION_MATRIX, projection);     // Retrieve The Projection Matrix
+ 
+		GLfloat winX, winY, winZ;               // Holds Our X, Y and Z Coordinates
+		GLfloat winX2, winY2, winZ2;
+
+		winX = clickX;                  // Holds The Mouse X Coordinate
+		winY = viewport[3] - clickY;                  // Holds The Mouse Y Coordinate
+		glReadPixels(winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+		//winZ = 0.99;
+
+		winX2 = clickX2;
+		winY2 = viewport[3] - clickY2;
+		glReadPixels(winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ2);
+
+		GLdouble posX, posY, posZ;              // Hold The Final Values
+		GLdouble posX2, posY2, posZ2;
+
+		gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+		gluUnProject( winX2, winY2, winZ2, modelview, projection, viewport, &posX2, &posY2, &posZ2);
+
+		double speedScale = 0.1;
+
+		double dx = (posX2 - posX)*speedScale;
+		double dy = (posY2 - posY)*speedScale;
+		double dz = (posZ2 - posZ)*speedScale;
+
+		if(addObj == 1) {
+			
+			//Create proxy object
+			theUniverse.setProxy(posX,posY,posZ,1.0);
+			addObj = 2;
+
+		}
+		else if(addObj == 2) {
+			theUniverse.setProxyVector(posX2,posY2,posZ2);
+		}
+		else if(addObj == 3) {
+
+			theUniverse.addObject(posX, posY, posZ, dx, 0, dz, 1.0);
+			theUniverse.clearProxy();
+
+			addObj = 0;
+		}
+	}
+	
 
 	//Display info on screen
 	if(showInfo && !lookAt) {
@@ -190,6 +264,14 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		currentLine += lineHeight;
 		sprintf(buffer, "Simulation Speed: %.3f", timestep);
 		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "Clicked Point: %.0f %.0f", clickX, clickY);
+		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "Drag Point: %.0f %.0f", clickX2, clickY2);
+		printString(2, currentLine, buffer);
 	}
 }
 
@@ -203,6 +285,8 @@ void GlWindow::draw() {
 	glViewport(0,0,w(), h());
     GlWindow::displayMe(cam1, false);
 
+	/*
+
 	// draw second scene in the top right corner
 	glViewport(w()/2, h()/2, w()/2, h()/2);
 	// used so I could clear only the top right of the screen
@@ -211,6 +295,8 @@ void GlWindow::draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	GlWindow::displayMe(cam2, true);
 	glDisable(GL_SCISSOR_TEST);
+
+	*/
 
 	glFlush();
 
@@ -245,22 +331,52 @@ int GlWindow::handle(int Fl_event) {
         return 1;
 
 	case FL_DRAG:
-        mouseX = Fl::event_x();
-        mouseY = Fl::event_y();
+		if(mouseButton == 1) {
+			mouseX = Fl::event_x();
+			mouseY = Fl::event_y();
+		}
+		else {
+			clickX2 = Fl::event_x();
+			clickY2 = Fl::event_y();
+		}
+
         return 1;
 
     case FL_PUSH:
-        mouseX = Fl::event_x();
-        mouseY = Fl::event_y();
-        mouseX2 = mouseX;
-        mouseY2 = mouseY;
-		if (mouseX > w()/2 && mouseY < h()/2 && !secWin) {
-			secWin = true;
+
+		switch(Fl::event_button()) {
+		case FL_LEFT_MOUSE:
+
+			mouseX = Fl::event_x();
+			mouseY = Fl::event_y();
+			mouseX2 = mouseX;
+			mouseY2 = mouseY;
+
+			mouseButton = 1;
+			if (mouseX > w()/2 && mouseY < h()/2 && !secWin) {
+				//secWin = true;
+			}
+			return 1;
+
+		case FL_RIGHT_MOUSE:
+			
+			clickX = Fl::event_x();
+			clickY = Fl::event_y();
+			clickX2 = clickX;
+			clickY2 = clickY;
+			mouseButton = 2;
+			addObj = 1;
+
+			return 1;
 		}
-        return 1;
+   
 
 	case FL_RELEASE:
 		secWin = false;
+		
+		if(addObj == 2)
+			addObj = 3;
+
 		return 1;
 
     //Handle key events
@@ -281,6 +397,11 @@ int GlWindow::handle(int Fl_event) {
 		case FL_F+3:
             //Toggle info overlay
 			showInfo = !showInfo;
+			return 1;
+
+		case FL_F+4:
+            //Toggle grid
+			showGrid = !showGrid;
 			return 1;
 
         case ' ':
@@ -457,7 +578,7 @@ int GlWindow::handle(int Fl_event) {
 GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,L) {
 
     //Initialize sensitivity variables
-    moveSpeed = 0.1;
+    moveSpeed = 0.3;
 	rotSpeed = 1.0;
 	scaleSpeed = 0.05;
 	mouseSensitivity = 0.25;
@@ -475,11 +596,17 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
     //Initialize mouse position
     mouseX = mouseY = 0.0;
 	mouseX2 = mouseY2 = 0.0;
+	secWin = false;
+	clickX = clickY = 0.0;
+	clickX2 = clickY2 = 0.0;
+	mouseButton = 1;
+	addObj = 0;
 
-	timestep = 1.0/30.0;
+	timestep = (1.0/30.0)*10;
 
     //Initialize other variables
 	showInfo = true;
+	showGrid = true;
 
     //Create initial timer
 	Fl::add_timeout(1.0/30.0, animate, this);

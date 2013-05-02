@@ -14,17 +14,23 @@
 #define UNIVERSE_H
 
 #include <list>
-//#include <vector>
 #include "Body.h"
-
-
 
 class Universe {
 public:
 
 std::list<Body> objList;
 
-Universe() {}
+std::list<Point> starList;
+
+Body proxy;
+Point proxyVector;
+bool drawProxy;
+
+Universe() {
+	drawProxy = false;
+	createStars();
+}
 
 void addObject();
 
@@ -43,6 +49,14 @@ Body mergeBodies(Body a, Body b);
 void draw();
 
 void clear();
+
+void createStars();
+
+void setProxy(double x, double y, double z, double m);
+
+void setProxyVector(double x, double y, double z);
+
+void clearProxy();
 
 };
 

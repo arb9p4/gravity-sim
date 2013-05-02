@@ -10,6 +10,8 @@
  *	Copyright University of Missouri-Columbia
  */
 
+#include <FL/glu.h>
+#include <FL/glut.H>
 #include <cmath>
 #include "Universe.h"
 
@@ -102,12 +104,68 @@ Body Universe::mergeBodies(Body a, Body b) {
 
 void Universe::draw() {
 
+	glColor3f(1.0, 1.0, 1.0);
+    glBegin(GL_POINTS);
+	std::list<Point>::iterator starit;
+    for(starit = starList.begin(); starit != starList.end(); ++starit) {
+        glVertex3f((*starit).X, (*starit).Y, (*starit).Z);
+    }
+	glEnd();
+
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
         (*it).draw();
     }
+
+	if(drawProxy) {
+		glColor3f(1.0, 1.0, 1.0);
+		glBegin(GL_LINES);
+		glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
+		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
+		glEnd();
+		proxy.draw();
+	}
 }
 
 void Universe::clear() {
     objList.clear();
+}
+
+void Universe::createStars() {
+	
+	double minDist = 1000;
+	double maxDist = 100000;
+
+	starList.clear();
+	while(starList.size() < 10000) {
+	
+		Point s;
+		
+		s.X = ((double)rand()/(double)RAND_MAX - 0.5)*2*maxDist;
+		s.Y = ((double)rand()/(double)RAND_MAX - 0.5)*2*maxDist;
+		s.Z = ((double)rand()/(double)RAND_MAX - 0.5)*2*maxDist;
+		
+		if(s.X*s.X + s.Y*s.Y + s.Z*s.Z > minDist)
+			starList.push_back(s);
+    }
+}
+
+void Universe::setProxy(double x, double y, double z, double m) {
+	proxy = Body(x,y,z,0,0,0,m);
+	proxyVector.X = x;
+	proxyVector.Y = y;
+	proxyVector.Z = z;
+	drawProxy = true;
+}
+
+void Universe::setProxyVector(double x, double y, double z) {
+	Point p;
+	p.X = x;
+	p.Y = y;
+	p.Z = z;
+	proxyVector = p;
+}
+
+void Universe::clearProxy() {
+	drawProxy = false;
 }
