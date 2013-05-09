@@ -87,6 +87,7 @@ public:
 
 	bool showInfo;	//Display diagnostic information on the screen
 	bool showGrid;	//Display the grid
+	bool showForceGrid;	//Display the force grid
 
 	//Help window objects
 	Fl_Window *helpWindow;

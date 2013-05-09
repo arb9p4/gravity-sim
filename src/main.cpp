@@ -57,6 +57,8 @@ class GravitySimApp {
 
         double speed = 0.3;
 
+		o->view->theUniverse.addObject(0,0,0,0,0,0,10);
+
         for(int i = 0; i < 100; i++) {
             double angle = ((double)rand()/(double)RAND_MAX)*2*PI;
             double radius = ((double)rand()/(double)RAND_MAX)*3+10;
@@ -69,7 +71,16 @@ class GravitySimApp {
 
         }
 
+    }
+
+	static void addEarthMoon(Fl_Widget *w, void *data) {
+        GravitySimApp *o = (GravitySimApp*)data;
+
+		//Earth
         o->view->theUniverse.addObject(0,0,0,0,0,0,10);
+
+		//Moon
+		o->view->theUniverse.addObject(10,0,0,0,0,.29,0.123);
     }
 
 	static void helpMenu(Fl_Widget *w, void *data) {
@@ -94,6 +105,7 @@ public:
         menu->add("Add/Two Objects", 0, addObjects, (void*)this);
 		menu->add("Add/Orbiting Objects", 0, addOrbit, (void*)this);
 		menu->add("Add/Disk", 0, addDisk, (void*)this);
+		menu->add("Add/Earth and Moon", 0, addEarthMoon, (void*)this);
 		menu->add("Help/Key Bindings", 0, helpMenu, (void*)this);
 
         view = new GlWindow(0, 25, win->w(), win->h()-25);

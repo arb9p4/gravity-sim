@@ -30,6 +30,14 @@ void Universe::addObject(double x, double y, double z,
 	objList.push_back(Body(x,y,z,dx,dy,dz,m));
 }
 
+void Universe::addObject(double x, double y, double z,
+			   double m, Body* b) {
+
+	
+
+	//objList.push_back(Body(x,y,z,dx,dy,dz,m));
+}
+
 void Universe::addTime(double timestep) {
 
     std::list<Body>::iterator it1, it2;
@@ -206,4 +214,17 @@ void Universe::selectObject(double x, double y, double z) {
 		objList.push_front(temp);
 
 	//}
+}
+
+double Universe::computeForce(double x, double y, double z) {
+
+	Body b(x,y,z);
+	double f = 0;
+
+    std::list<Body>::iterator it;
+    for(it = objList.begin(); it != objList.end(); ++it) {
+		f += (b).computeForce(*it, 0);
+    }
+
+	return f;
 }

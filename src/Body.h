@@ -61,7 +61,7 @@ double radius;
 bool selected;
 
 //History trail
-//std::deque<Point> trail;
+std::deque<Point> trail;
 
 //Constructor to place a body at a random location
 Body();
@@ -82,7 +82,7 @@ void stop();
 void randVelocity();
 
 //Updates the velocity to reflect the force from another body
-void computeForce(Body b, double timestep);
+double computeForce(Body &b, double timestep);
 
 //Draws the body
 void draw();
@@ -90,7 +90,7 @@ void draw();
 virtual void drawShape();
 
 //Draws the history trail
-//void drawHistory();
+void drawHistory();
 
 //Draws a transparent hull around the body used for selection
 void drawSelector();

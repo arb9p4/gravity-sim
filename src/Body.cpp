@@ -20,7 +20,7 @@
 //Constructor to place a body at a random location
 Body::Body() {
 
-    double maxDist = 2.0;
+    double maxDist = 10.0;
 
     //Set initial position
     Xpos = ((double)rand()/(double)RAND_MAX - 0.5)*2*maxDist;
@@ -106,7 +106,7 @@ void Body::stop() {
 //Gives the body random velocities
 void Body::randVelocity() {
 
-    double maxVelocity = 0.1;
+    double maxVelocity = 1;
 
     dXpos = ((double)rand()/(double)RAND_MAX - 0.5)*2*maxVelocity;
     dYpos = ((double)rand()/(double)RAND_MAX - 0.5)*2*maxVelocity;
@@ -114,7 +114,7 @@ void Body::randVelocity() {
 }
 
 //Updates the velocity to reflect the force from another body
-void Body::computeForce(Body b, double timestep) {
+double Body::computeForce(Body &b, double timestep) {
 
     double eps = 0.0001;
 	double G = 0.1;
@@ -131,6 +131,8 @@ void Body::computeForce(Body b, double timestep) {
 	dXpos += timestep*force*dX/(dist + eps);
 	dYpos += timestep*force*dY/(dist + eps);
 	dZpos += timestep*force*dZ/(dist + eps);
+
+	return force;
 }
 
 //Draws the body
@@ -169,7 +171,7 @@ void Body::drawShape() {
 	glDisable(GL_LIGHTING);
 }
 
-/*
+
 //Draws the history trail
 void Body::drawHistory() {
 
@@ -178,6 +180,7 @@ void Body::drawHistory() {
     
 	bool addPoint = false;
 
+	/*
 	if(trail.empty()) {
 		addPoint = true;
 	}
@@ -192,6 +195,11 @@ void Body::drawHistory() {
 			trail.pop_front();
 
 	}
+	*/
+
+	trail.push_back(thisPoint);
+	if(trail.size() > 100)
+		trail.pop_front();
 
     glBegin(GL_LINE_STRIP);
     //Draw the trail history
@@ -199,13 +207,13 @@ void Body::drawHistory() {
     int count = 0;
 	glColor3f(1.0, 1.0, 1.0);
     for(it = trail.begin(); it != trail.end(); ++it) {
-        //glColor4f(1.0, 1.0, 1.0, double(count++)/trail.size());
+        glColor4f(1.0, 1.0, 1.0, double(count++)/trail.size());
         glVertex3f((*it).X, (*it).Y, (*it).Z);
     }
     glEnd();
 
 }
-*/
+
 
 void Body::drawSelector() {
 	//Save current transformation

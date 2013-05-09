@@ -32,16 +32,24 @@ Universe() {
 	createStars();
 
 	//Add default object
-	addObject(0,0,0);
+	//addObject(0,0,0);
 }
 
+//Add object at random location
 void addObject();
 
+//Add object at specific location with no velocity
 void addObject(double x, double y, double z);
 
+//Add object with specific position, velocity, and mass
 void addObject(double x, double y, double z,
 			   double dx, double dy, double dz,
 			   double m);
+
+
+//Add object at position into orbit around specific body
+void addObject(double x, double y, double z, double m, Body* b);
+
 
 void addTime(double timestep);
 
@@ -64,6 +72,9 @@ void clearProxy();
 void drawSelectors();
 
 void selectObject(double x, double y, double z);
+
+//Computes the total force at a point
+double computeForce(double x, double y, double z);
 
 };
 

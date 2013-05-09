@@ -12,6 +12,7 @@
 
 #include "GlWindow.h"
 #include <iostream>
+#include <vector>
 using namespace std;
 
 #define PI_180 0.01745329251994329576923690768489
@@ -67,6 +68,11 @@ void animate(void* pData) {
 			pWindow->cam2.camX = pWindow->theUniverse.objList.front().Xpos;
 			pWindow->cam2.camY = pWindow->theUniverse.objList.front().Ypos;
 			pWindow->cam2.camZ = pWindow->theUniverse.objList.front().Zpos;
+		}
+		else {
+			pWindow->cam2.camX = 0;
+			pWindow->cam2.camY = 0;
+			pWindow->cam2.camZ = 0;
 		}
 
 		// debug statements
@@ -155,6 +161,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		}
 		
 		
+		
 		//Draw axes
 		glColor3f(0.6, 0.3, 0.3);
 		glVertex3f(0, 0, 0);
@@ -167,10 +174,66 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		glColor3f(0.3, 0.3, 0.6);
 		glVertex3f(0, 0, 0);
 		glVertex3f(0, 0, 10);
-
-
 		glEnd();
 
+	}
+
+	if(showForceGrid) {
+
+		int forceGridSize = 51;				//Number of grid lines to draw
+		double forceGridResolution = 0.25;	//Distance between grid lines
+
+		double forceGridOffset = -(forceGridSize-1)*forceGridResolution/2.0;
+
+		std::vector<std::vector<double> > forces(forceGridSize, std::vector<double>(forceGridSize, 0));
+		
+		double f;
+		for(int i = 0; i < forceGridSize; ++i) {
+			for(int j = 0; j < forceGridSize; ++j) {
+				f = theUniverse.computeForce(forceGridOffset+i*forceGridResolution,0,
+					                                    forceGridOffset+j*forceGridResolution);
+				forces[i][j] = -2*sqrt(abs(f));
+				//forces[i][j] = f;
+			}
+		}
+
+		std::vector<std::vector<double> > forcesOld(forces);
+		int count;
+		for(int i = 0; i < forceGridSize; ++i) {
+			for(int j = 0; j < forceGridSize; ++j) {
+				
+				f = 0;
+				count = 0;
+				for(int ii = max(i-1,0); ii < min(i+1,forceGridSize); ++ii) {
+					for(int jj = max(j-1,0); jj < min(j+1,forceGridSize); ++jj) {
+						f += forcesOld[ii][jj];
+						count++;
+					}
+				}
+
+				forces[i][j] = f/count;
+
+			}
+		}
+
+		glColor3f(0.3, 0.4, 0.3);
+		for(int i = 0; i < forceGridSize; ++i) {
+			glBegin(GL_LINE_STRIP);
+			for(int j = 0; j < forceGridSize; ++j) {
+				glVertex3f(forceGridOffset+i*forceGridResolution, -1+forces[i][j], 
+					       forceGridOffset+j*forceGridResolution);
+			}
+			glEnd();
+		}
+		for(int j = 0; j < forceGridSize; ++j) {
+			glBegin(GL_LINE_STRIP);
+			for(int i = 0; i < forceGridSize; ++i) {
+				glVertex3f(forceGridOffset+i*forceGridResolution, -1+forces[i][j],
+					       forceGridOffset+j*forceGridResolution);
+			}
+			glEnd();
+		}
+		
 		
 	}
 
@@ -198,7 +261,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 	theUniverse.draw();
 
 	if(showGrid)
-		glColor4f(0.3, 0.3, 0.4, 0.2);	//Give selection plane some transparency
+		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
 	else
 		glColor4f(0.3, 0.3, 0.4, 0.0);	//Make selection plane completely invisible
 
@@ -282,7 +345,6 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 			addObj = 0;
 		}
 	}
-	
 
 	//Display info on screen
 	if(showInfo && lookAt) {
@@ -344,7 +406,7 @@ void GlWindow::draw() {
 	glViewport(0,0,w(), h());
     GlWindow::displayMe(cam1, true);
 
-	
+	/*
 
 	// draw second scene in the top right corner
 	glViewport(w()/2, h()/2, w()/2, h()/2);
@@ -355,7 +417,7 @@ void GlWindow::draw() {
 	GlWindow::displayMe(cam2, true);
 	glDisable(GL_SCISSOR_TEST);
 
-	
+	*/
 
 	glFlush();
 
@@ -418,7 +480,7 @@ int GlWindow::handle(int Fl_event) {
 
 			mouseButton = 1;
 			if (mouseX > w()/2 && mouseY < h()/2 && !secWin) {
-				secWin = true;
+				//secWin = true;
 			}
 			return 1;
 		
@@ -475,6 +537,11 @@ int GlWindow::handle(int Fl_event) {
 		case FL_F+4:
             //Toggle grid
 			showGrid = !showGrid;
+			return 1;
+
+		case FL_F+5:
+            //Toggle force grid
+			showForceGrid = !showForceGrid;
 			return 1;
 
         case ' ':
@@ -677,12 +744,14 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	addObj = 0;
 
 	camDist = 10.0;
+	updateFocus = false;
 
 	timestep = (1.0/30.0)*10;
 
     //Initialize other variables
 	showInfo = true;
 	showGrid = true;
+	showForceGrid = true;
 
     //Create initial timer
 	Fl::add_timeout(1.0/30.0, animate, this);
