@@ -68,6 +68,13 @@ void animate(void* pData) {
 			pWindow->cam2.camX = pWindow->theUniverse.objList.front().Xpos;
 			pWindow->cam2.camY = pWindow->theUniverse.objList.front().Ypos;
 			pWindow->cam2.camZ = pWindow->theUniverse.objList.front().Zpos;
+			
+			pWindow->cam2.dx = pWindow->theUniverse.objList.front().dXpos;
+			pWindow->cam2.dy = pWindow->theUniverse.objList.front().dYpos;
+			pWindow->cam2.dz = pWindow->theUniverse.objList.front().dZpos;
+			//cout << pWindow->theUniverse.objList.front().dXpos << ", "<<
+			//	pWindow->theUniverse.objList.front().dYpos << ", " <<
+			//	pWindow->theUniverse.objList.front().dZpos << endl;
 		}
 		else {
 			pWindow->cam2.camX = 0;
@@ -105,6 +112,10 @@ void GlWindow::initialize(int W,int H) {
 	
 }
 
+double GlWindow::normalize(double x, double y, double z) {
+	return sqrt((x*x) + (y*y) + (z*z));
+}
+
 // split out drawing function so that you could draw multiple cameras,
 // then specifiy lookAt = true to follow a planet.
 void GlWindow::displayMe(Camera camNew, bool lookAt) {
@@ -121,16 +132,39 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 
 	if (lookAt) {
 		// TODO fix this
-		gluLookAt(
-			cam2.camX, cam2.camY, cam2.camZ+camDist, 
-			cam2.camX, cam2.camY, cam2.camZ, 
-			0, 1, 0);
-		glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
-		//glRotatef(camNew.rotZ, 0.0, 0.0, 1.0);
+
+		// normalize velocity
+		// - noramilzed velocty
+		double normalizedVector = normalize(cam2.dx, cam2.dy, cam2.dz);
+		normalizedVector += 0.000000000000000000000001;
+		double x = cam2.camX - (cam2.dx/normalizedVector);
+		double y = cam2.camY - (cam2.dy/normalizedVector);
+		double z = cam2.camZ - (cam2.dz/normalizedVector);
+		
+		cout << normalizedVector << endl;
+
+		if (theUniverse.objList.size() > 0) {
+			gluLookAt(
+				x, y, z, 
+				cam2.camX, cam2.camY, cam2.camZ, 
+				0, 1, 0);
+		} else {
+			gluLookAt(
+				cam2.camX, cam2.camY, cam2.camZ+5.0, 
+				cam2.camX, cam2.camY, cam2.camZ, 
+				0, 1, 0);
+
+			glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
 		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
 		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
-		
 		glTranslatef(-cam2.camX, -cam2.camY, -cam2.camZ);
+		}
+		/*
+		glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
+		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
+		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
+		glTranslatef(-cam2.camX, -cam2.camY, -cam2.camZ);
+		*/
 			
 			//glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
 		

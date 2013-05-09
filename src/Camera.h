@@ -19,6 +19,7 @@ class Camera
 		double camX, camY, camZ;
 		double rotX, rotY, rotZ;
 		double fov, nearClip, farClip;
+		double dx, dy, dz;
 
 };
 

@@ -18,6 +18,8 @@ Camera::Camera()
 	nearClip = 0.1;
 	farClip = 1000000.0;
 
+	dx = dy = dz = 0.0;
+
 }
 
 void Camera::updateClipping(double fov1, double nearClip1, double farClip1) {
