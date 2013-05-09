@@ -59,6 +59,7 @@ public:
 	//Mouse position
     double mouseX, mouseY;		//Current position
     double mouseX2, mouseY2;	//Last position
+	double cursorX, cursorY;	//Cursor position
 	bool secWin;
 	double clickX, clickY;		//Clicked point
 	double clickX2, clickY2;		//Clicked point
@@ -69,6 +70,9 @@ public:
 	//Camera parameters
 	Camera cam1;
 	Camera cam2;
+
+	double camDist;		//Distance of the camera from object (set by mouse wheel)
+	bool updateFocus;	//True if the focus object should be updated
 
 	double timestep;
 

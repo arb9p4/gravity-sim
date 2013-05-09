@@ -106,8 +106,10 @@ Body Universe::mergeBodies(Body a, Body b) {
     return Body(x,y,z,dx,dy,dz,m);
 }
 
+//Draws all objects in the universe
 void Universe::draw() {
 
+	//Draw stars
 	glColor3f(1.0, 1.0, 1.0);
     glBegin(GL_POINTS);
 	std::list<Point>::iterator starit;
@@ -116,11 +118,13 @@ void Universe::draw() {
     }
 	glEnd();
 
+	//Draw all objects
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
         (*it).draw();
     }
 
+	//Draw proxy if necessary
 	if(drawProxy) {
 		glColor3f(1.0, 1.0, 1.0);
 		glBegin(GL_LINES);
@@ -163,13 +167,43 @@ void Universe::setProxy(double x, double y, double z, double m) {
 }
 
 void Universe::setProxyVector(double x, double y, double z) {
-	Point p;
-	p.X = x;
-	p.Y = y;
-	p.Z = z;
+	Point p(x,y,z);
 	proxyVector = p;
 }
 
 void Universe::clearProxy() {
 	drawProxy = false;
+}
+
+void Universe::drawSelectors() {
+	//Draw all selector objects
+    std::list<Body>::iterator it;
+    for(it = objList.begin(); it != objList.end(); ++it) {
+		(*it).drawSelector();
+    }
+}
+
+void Universe::selectObject(double x, double y, double z) {
+	double minDist = 10000000000;
+	std::list<Body>::iterator closest = objList.begin();
+	Point p1(x,y,z);
+
+	std::list<Body>::iterator it;
+    for(it = objList.begin(); it != objList.end(); ++it) {
+		Point p2((*it).Xpos, (*it).Ypos, (*it).Zpos);
+		double d = p1.dist(p2);
+		if(d < minDist) {
+			minDist = d;
+			closest = it;
+		}
+    }
+
+	//if(minDist < (*closest).radius) {
+	
+		//Move closest object to the front of the list
+		Body temp = *closest;
+		objList.erase(closest);
+		objList.push_front(temp);
+
+	//}
 }

@@ -86,7 +86,7 @@ public:
 
 	//Constructor
     GravitySimApp() {
-        win = new Fl_Window(640, 480, "Gravity Simulator");
+        win = new Fl_Window(1280, 800, "Gravity Simulator");
 
 		menu = new Fl_Menu_Bar(0, 0, win->w(), 25);
 		menu->add("File/Clear", 0, clearScene, (void*)this);

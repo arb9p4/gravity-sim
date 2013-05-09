@@ -35,6 +35,8 @@ Body::Body() {
 	//Compute radius
     radius = pow(3*mass/(4*PI),0.33333);
 
+	selected = false;
+
     stop();
 
     //theAsteroid = Asteroid();
@@ -55,6 +57,8 @@ Body::Body(double x, double y, double z) {
 
 	//Compute radius
     radius = pow(3*mass/(4*PI),0.33333);
+
+	selected = false;
 
     stop();
 
@@ -79,6 +83,8 @@ Body::Body(double x, double y, double z,
 
 	//Compute radius
     radius = pow(3*mass/(4*PI),0.33333);
+
+	selected = false;
 
     stop();
 
@@ -133,6 +139,7 @@ void Body::draw() {
     //Save current transformation
     glPushMatrix();
 
+
     //drawHistory();
 
 	//Move object
@@ -149,14 +156,17 @@ void Body::draw() {
 	//glutWireSphere(0.2, 20, 16);
     //theAsteroid.draw();
     //glutWireTetrahedron();
+
     //Restore last transformation
     glPopMatrix();
 }
 
 void Body::drawShape() {
-    glColor3f(1.0, 1.0, 1.0);
+	glEnable(GL_LIGHTING);
+    //glColor3f(1.0, 0.0, 1.0);
 	glRotatef(90.0, 1.0, 0.0, 0.0);
-    glutWireSphere(radius, 20, 16);
+    glutSolidSphere(radius, 20, 16);
+	glDisable(GL_LIGHTING);
 }
 
 /*
@@ -164,23 +174,55 @@ void Body::drawShape() {
 void Body::drawHistory() {
 
     //Update the trail history
-    Point thisPoint;
-    thisPoint.X = Xpos;
-    thisPoint.Y = Ypos;
-    thisPoint.Z = Zpos;
-    trail.push_back(thisPoint);
-    if(trail.size() > 300)
-        trail.pop_front();
+    Point thisPoint(Xpos, Ypos, Zpos);
+    
+	bool addPoint = false;
+
+	if(trail.empty()) {
+		addPoint = true;
+	}
+	else if(thisPoint.dist(trail.back()) > 1) {
+		addPoint = true;
+	}
+
+	if(addPoint) {
+
+		trail.push_back(thisPoint);
+		if(trail.size() > 100)
+			trail.pop_front();
+
+	}
 
     glBegin(GL_LINE_STRIP);
     //Draw the trail history
     std::deque<Point>::iterator it;
     int count = 0;
+	glColor3f(1.0, 1.0, 1.0);
     for(it = trail.begin(); it != trail.end(); ++it) {
-        glColor4f(1.0, 1.0, 1.0, double(count++)/trail.size());
+        //glColor4f(1.0, 1.0, 1.0, double(count++)/trail.size());
         glVertex3f((*it).X, (*it).Y, (*it).Z);
     }
     glEnd();
 
 }
 */
+
+void Body::drawSelector() {
+	//Save current transformation
+    glPushMatrix();
+
+	//Move object
+    glTranslatef(Xpos, Ypos, Zpos);
+    glRotatef(Yrot, 0.0, 1.0, 0.0);
+    glRotatef(Xrot, 1.0, 0.0, 0.0);
+    glRotatef(Zrot, 0.0, 0.0, 1.0);
+
+
+    //Body is represented as a sphere
+	glColor4f(1.0, 1.0, 1.0, 0.5);
+	glRotatef(90.0, 1.0, 0.0, 0.0);
+	glutSolidSphere(radius*0.75, 20, 16);
+
+    //Restore last transformation
+    glPopMatrix();
+}

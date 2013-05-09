@@ -91,7 +91,7 @@ void GlWindow::initialize(int W,int H) {
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Create light source
-	GLfloat light_position[] = { 1.0, 2.0, 3.0, 0.0 };
+	GLfloat light_position[] = { 10.0, 20.0, 30.0, 0.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glDisable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -116,7 +116,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 	if (lookAt) {
 		// TODO fix this
 		gluLookAt(
-			cam2.camX, cam2.camY, cam2.camZ+5.0, 
+			cam2.camX, cam2.camY, cam2.camZ+camDist, 
 			cam2.camX, cam2.camY, cam2.camZ, 
 			0, 1, 0);
 		glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
@@ -140,8 +140,11 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 
     //Draw grid
 	if(showGrid) {
-		glColor3f(0.3, 0.3, 0.4);
+		
 		glBegin(GL_LINES);
+		
+		
+		glColor3f(0.3, 0.3, 0.4);
 		for(GLfloat i = -100.0; i <= 100.0; ++i) {
 			glVertex3f(i, 0.0, -100.0);
 			glVertex3f(i, 0.0, 100.0);
@@ -150,17 +153,52 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 			glVertex3f(-100.0, 0.0, i);
 			glVertex3f(100.0, 0.0, i);
 		}
+		
+		
+		//Draw axes
+		glColor3f(0.6, 0.3, 0.3);
+		glVertex3f(0, 0, 0);
+		glVertex3f(10, 0, 0);
+
+		glColor3f(0.3, 0.6, 0.3);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 10, 0);
+
+		glColor3f(0.3, 0.3, 0.6);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, 10);
+
+
 		glEnd();
 
 		
 	}
 
+	/* Turns out this may not be necessary after all, but could come in handy later
+
+	//Draw selectors
+	theUniverse.drawSelectors();
+
+	*/
+
+	GLint viewport[4];                  // Where The Viewport Values Will Be Stored
+	glGetIntegerv(GL_VIEWPORT, viewport);           // Retrieves The Viewport Values (X, Y, Width, Height)
+
+	GLdouble modelview[16];                 // Where The 16 Doubles Of The Modelview Matrix Are To Be Stored
+	glGetDoublev(GL_MODELVIEW_MATRIX, modelview);       // Retrieve The Modelview Matrix
+
+	GLdouble projection[16];                // Where The 16 Doubles Of The Projection Matrix Are To Be Stored
+	glGetDoublev(GL_PROJECTION_MATRIX, projection);     // Retrieve The Projection Matrix
+
+	
+
+	
 
 	//Draw objects
 	theUniverse.draw();
 
 	if(showGrid)
-		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
+		glColor4f(0.3, 0.3, 0.4, 0.2);	//Give selection plane some transparency
 	else
 		glColor4f(0.3, 0.3, 0.4, 0.0);	//Make selection plane completely invisible
 
@@ -170,6 +208,22 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		glVertex3f(100, 0, 100);
 		glVertex3f(100, 0, -100);
 	glEnd();
+
+	if(updateFocus) {
+		//Get the screen coordinates of the mouse cursor
+		GLfloat cursorWinX, cursorWinY, cursorWinZ;
+		cursorWinX = cursorX;
+		cursorWinY = viewport[3] - cursorY;
+		glReadPixels(cursorWinX, cursorWinY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &cursorWinZ);
+
+		//Get the world coodrdinate of the mouse cursor
+		GLdouble cursorPosX, cursorPosY, cursorPosZ;              // Hold The Final Values
+		gluUnProject( cursorWinX, cursorWinY, cursorWinZ, modelview, projection, viewport, &cursorPosX, &cursorPosY, &cursorPosZ);
+
+		theUniverse.selectObject(cursorPosX, cursorPosY, cursorPosZ);
+
+		updateFocus = false;
+	}
 
 	if(addObj > 0) {
 
@@ -181,6 +235,8 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 
 		GLdouble projection[16];                // Where The 16 Doubles Of The Projection Matrix Are To Be Stored
 		glGetDoublev(GL_PROJECTION_MATRIX, projection);     // Retrieve The Projection Matrix
+
+
  
 		GLfloat winX, winY, winZ;               // Holds Our X, Y and Z Coordinates
 		GLfloat winX2, winY2, winZ2;
@@ -192,7 +248,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 
 		winX2 = clickX2;
 		winY2 = viewport[3] - clickY2;
-		glReadPixels(winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ2);
+		glReadPixels(winX2, winY2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ2);
 
 		GLdouble posX, posY, posZ;              // Hold The Final Values
 		GLdouble posX2, posY2, posZ2;
@@ -206,8 +262,10 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		double dy = (posY2 - posY)*speedScale;
 		double dz = (posZ2 - posZ)*speedScale;
 
+
+
 		if(addObj == 1) {
-			
+
 			//Create proxy object
 			theUniverse.setProxy(posX,posY,posZ,1.0);
 			addObj = 2;
@@ -227,7 +285,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 	
 
 	//Display info on screen
-	if(showInfo && !lookAt) {
+	if(showInfo && lookAt) {
 
 		//Prepare camera for text overlay
 		glMatrixMode(GL_PROJECTION);
@@ -272,6 +330,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		currentLine += lineHeight;
 		sprintf(buffer, "Drag Point: %.0f %.0f", clickX2, clickY2);
 		printString(2, currentLine, buffer);
+
 	}
 }
 
@@ -283,7 +342,7 @@ void GlWindow::draw() {
 
 	// draw original scene on whole screen
 	glViewport(0,0,w(), h());
-    GlWindow::displayMe(cam1, false);
+    GlWindow::displayMe(cam1, true);
 
 	/*
 
@@ -330,6 +389,11 @@ int GlWindow::handle(int Fl_event) {
         Fl::focus(this);
         return 1;
 
+	case FL_MOVE:
+		cursorX = Fl::event_x();
+		cursorY = Fl::event_y();
+		return 1;
+
 	case FL_DRAG:
 		if(mouseButton == 1) {
 			mouseX = Fl::event_x();
@@ -357,6 +421,10 @@ int GlWindow::handle(int Fl_event) {
 				//secWin = true;
 			}
 			return 1;
+		
+		case FL_MIDDLE_MOUSE:
+			updateFocus = true;
+			return 1;
 
 		case FL_RIGHT_MOUSE:
 			
@@ -376,6 +444,11 @@ int GlWindow::handle(int Fl_event) {
 		
 		if(addObj == 2)
 			addObj = 3;
+
+		return 1;
+
+	case FL_MOUSEWHEEL:
+		camDist += 0.1*camDist*Fl::event_dy();
 
 		return 1;
 
@@ -596,11 +669,14 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
     //Initialize mouse position
     mouseX = mouseY = 0.0;
 	mouseX2 = mouseY2 = 0.0;
+	cursorX = cursorY = 0.0;
 	secWin = false;
 	clickX = clickY = 0.0;
 	clickX2 = clickY2 = 0.0;
 	mouseButton = 1;
 	addObj = 0;
+
+	camDist = 10.0;
 
 	timestep = (1.0/30.0)*10;
 

@@ -30,6 +30,9 @@ bool drawProxy;
 Universe() {
 	drawProxy = false;
 	createStars();
+
+	//Add default object
+	addObject(0,0,0);
 }
 
 void addObject();
@@ -57,6 +60,10 @@ void setProxy(double x, double y, double z, double m);
 void setProxyVector(double x, double y, double z);
 
 void clearProxy();
+
+void drawSelectors();
+
+void selectObject(double x, double y, double z);
 
 };
 

@@ -21,8 +21,22 @@
 #define PI 3.14159265359
 
 //Defines a point in space for trail history
-struct Point {
+class Point {
+public:
     double X, Y, Z;
+
+	Point() {X = Y = Z = 0.0;}
+	
+	Point(double x, double y, double z) {
+		X = x;
+		Y = y; 
+		Z = z;
+	}
+
+	//Returns the distance to another point
+	double dist(Point p) {
+		return sqrt((X-p.X)*(X-p.X) + (Y-p.Y)*(Y-p.Y) + (Z-p.Z)*(Z-p.Z));
+	}
 };
 
 class Body {
@@ -43,6 +57,8 @@ double dXrot, dYrot, dZrot; //Rotation
 double mass;
 
 double radius;
+
+bool selected;
 
 //History trail
 //std::deque<Point> trail;
@@ -75,5 +91,9 @@ virtual void drawShape();
 
 //Draws the history trail
 //void drawHistory();
+
+//Draws a transparent hull around the body used for selection
+void drawSelector();
+
 };
 #endif
