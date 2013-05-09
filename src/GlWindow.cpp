@@ -344,7 +344,7 @@ void GlWindow::draw() {
 	glViewport(0,0,w(), h());
     GlWindow::displayMe(cam1, true);
 
-	/*
+	
 
 	// draw second scene in the top right corner
 	glViewport(w()/2, h()/2, w()/2, h()/2);
@@ -355,7 +355,7 @@ void GlWindow::draw() {
 	GlWindow::displayMe(cam2, true);
 	glDisable(GL_SCISSOR_TEST);
 
-	*/
+	
 
 	glFlush();
 
@@ -418,7 +418,7 @@ int GlWindow::handle(int Fl_event) {
 
 			mouseButton = 1;
 			if (mouseX > w()/2 && mouseY < h()/2 && !secWin) {
-				//secWin = true;
+				secWin = true;
 			}
 			return 1;
 		
