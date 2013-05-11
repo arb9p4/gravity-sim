@@ -150,7 +150,7 @@ Body Universe::mergeBodies(Body a, Body b) {
 }
 
 //Draws all objects in the universe
-void Universe::draw(bool showTrails) {
+void Universe::draw(bool showTrails, GLuint texture) {
 
 	//Draw stars
 	glColor3f(1.0, 1.0, 1.0);
@@ -164,7 +164,7 @@ void Universe::draw(bool showTrails) {
 	//Draw all objects
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
-        (*it).draw(showTrails);
+        (*it).draw(showTrails, texture);
     }
 
 	//Draw proxy if necessary
@@ -174,7 +174,7 @@ void Universe::draw(bool showTrails) {
 		glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
 		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
 		glEnd();
-		proxy.draw(showTrails);
+		proxy.draw(showTrails, texture);
 	}
 }
 

@@ -51,7 +51,7 @@ double computeDistance(Body &a, Body &b);
 
 Body mergeBodies(Body a, Body b);
 
-void draw(bool showTrails);
+void draw(bool showTrails, GLuint texture);
 
 void clear();
 

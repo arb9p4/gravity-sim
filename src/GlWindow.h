@@ -44,6 +44,9 @@ class GlWindow : public Fl_Gl_Window {
 
 public:
 
+	GLuint texture[1];
+	GLuint GlWindow::LoadTextureRAW( const char * filename );
+
 	static const int PRIMARY_CAM;
 	static const int CHASE_CAM;
 

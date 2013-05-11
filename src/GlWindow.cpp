@@ -70,37 +70,35 @@ void animate(void* pData) {
 		double tweenRate = 0.5;
 		if (pWindow->theUniverse.objList.size() > 0) {
 			
-			if (pWindow->theUniverse.objList.size() > 1) {
-			
-				cout << "set cam2" <<endl;
-				std::list<Body>::iterator it = pWindow->theUniverse.objList.begin();
-				it++;
-				pWindow->cam2.setTranslation(
-					it->Xpos,
-					it->Ypos,
-					it->Zpos
+			Body body = pWindow->theUniverse.objList.front();
+
+			// only calculate the camera if its turned on
+			if (pWindow->showChaseCamera) {
+				// camera 2 updates
+				pWindow->cam2.setTarget(
+					body.Xpos,
+					body.Ypos,
+					body.Zpos
 				);
-
-				pWindow->cam2.dx = it->dXpos;
-				pWindow->cam2.dy = it->dYpos;
-				pWindow->cam2.dz = it->dZpos;
-
-				/*
+				
 				pWindow->cam2.updateTranslation(
 					(pWindow->cam2.camXtarget - pWindow->cam2.camX) * tweenRate,
 					(pWindow->cam2.camYtarget - pWindow->cam2.camY) * tweenRate,
 					(pWindow->cam2.camZtarget - pWindow->cam2.camZ) * tweenRate
 				);
-				*/
-
-				//pWindow->cam2.camDist += (pWindow->cam2.camDistTarget - pWindow->cam2.camDist) * tweenRate;
-
+				
+				pWindow->cam2.dx = body.dXpos;
+				pWindow->cam2.dy = body.dYpos;
+				pWindow->cam2.dz = body.dZpos;
+				
+				pWindow->cam2.camDist += (pWindow->cam2.camDistTarget - pWindow->cam2.camDist) * tweenRate;
 			}
-
+			
+			// cam1 updates
 			pWindow->cam1.setTarget(
-				pWindow->theUniverse.objList.front().Xpos,
-				pWindow->theUniverse.objList.front().Ypos,
-				pWindow->theUniverse.objList.front().Zpos
+				body.Xpos,
+				body.Ypos,
+				body.Zpos
 			);
 			// update tweens
 			pWindow->cam1.updateTranslation(
@@ -110,7 +108,6 @@ void animate(void* pData) {
 			);
 			pWindow->cam1.camDist += (pWindow->cam1.camDistTarget - pWindow->cam1.camDist) * tweenRate;
 			
-
 		} else {
 			pWindow->cam1.setTranslation(0.0, 0.0, 0.0);
 			pWindow->cam2.setTranslation(0.0, 0.0, 0.0);
@@ -135,12 +132,20 @@ void GlWindow::initialize(int W,int H) {
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Create light source
-	GLfloat light_position[] = { 10.0, 20.0, 30.0, 0.0 };
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	//GLfloat light_position[] = { 10.0, 20.0, 30.0, 0.0 };
+	//glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glDisable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
-	
+
+	glEnable( GL_TEXTURE_2D );
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
+	glEnable(GL_CULL_FACE);
+	glDepthFunc(GL_LEQUAL);
+    
+	texture[0] = LoadTextureRAW( "earth.raw" );
+
 }
 
 double normalize(double x, double y, double z) {
@@ -173,6 +178,11 @@ void GlWindow::displayMe(Camera camNew) {
 				camNew.camZ - (camNew.dz/normalizedVector) * camNew.camDistTarget,
 				camNew.camX, camNew.camY, camNew.camZ,
 				0, 1, 0);
+
+			// debug statement
+			//cout << camNew.camX - (camNew.dx/normalizedVector) * camNew.camDistTarget << ", " <<
+			//	camNew.camY - (camNew.dy/normalizedVector) * camNew.camDistTarget << ", " <<
+			//	camNew.camZ - (camNew.dz/normalizedVector) * camNew.camDistTarget << endl;
 
 			break;
 
@@ -382,7 +392,7 @@ void GlWindow::displayMe(Camera camNew) {
 	
 
 	//Draw objects
-	theUniverse.draw(camNew.showTrails);
+	theUniverse.draw(camNew.showTrails, texture[0]);
 
 	if(camNew.showGrid)
 		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
@@ -1026,4 +1036,37 @@ void GlWindow::resetCamera() {
 
 	cam2.rotX = 45.0;
 	cam2.rotY = -45.0;
+}
+
+GLuint GlWindow::LoadTextureRAW( const char * filename ) {
+
+	GLuint texture;
+    
+	int width, height;
+   
+	unsigned char * data;
+    
+	FILE * file;
+	file = fopen( filename, "rb" );
+	if ( file == NULL ) return 0;
+	width = 1024;
+	height = 512;
+	data = (unsigned char *)malloc( width * height * 3 );
+	fread( data, width * height * 3, 1, file );
+	fclose( file );
+
+	glGenTextures( 1, &texture ); 
+	glBindTexture( GL_TEXTURE_2D, texture );
+	glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ); 
+    
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+	gluBuild2DMipmaps( GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, data );
+    
+	free( data );
+    
+	return texture;
+    
 }

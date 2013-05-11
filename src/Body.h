@@ -94,15 +94,19 @@ void randVelocity();
 double computeForce(Body &b, double timestep);
 
 //Draws the body
-void draw(bool showTrails);
+void draw(bool showTrails, GLuint texture);
 
-virtual void drawShape();
+virtual void drawShape(GLuint texture);
 
 //Draws the history trail
 void drawHistory();
 
 //Draws a transparent hull around the body used for selection
 void drawSelector();
+
+// texture
+GLuint texture;
+void Body::DisplaySphere (double R, GLuint texture);
 
 };
 #endif
