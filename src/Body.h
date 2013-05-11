@@ -16,6 +16,7 @@
 
 
 #include <deque>
+#include <vector>
 //#include "Asteroid.h"
 
 #define PI 3.14159265359
@@ -60,8 +61,14 @@ double radius;
 
 bool selected;
 
+bool isStatic;		//Is the object affected by other objects?
+
 //History trail
-std::deque<Point> trail;
+//std::deque<Point> trail;
+std::vector<Point> trail;
+std::vector<double> trailAlpha;
+int trailIndex;
+int trailLength;
 
 //Constructor to place a body at a random location
 Body();
@@ -78,6 +85,8 @@ Body(double x, double y, double z,
 //Stops all movement
 void stop();
 
+void updateRadius();
+
 //Gives the body a random velocity
 void randVelocity();
 
@@ -85,7 +94,7 @@ void randVelocity();
 double computeForce(Body &b, double timestep);
 
 //Draws the body
-void draw();
+void draw(bool showTrails);
 
 virtual void drawShape();
 

@@ -15,6 +15,15 @@
 #include <cmath>
 #include "Universe.h"
 
+Universe::Universe() {
+	drawProxy = false;
+	createStars();
+
+	//Add home object
+	addObject(0,0,0,0,0,0,0);
+	objList.front().isStatic = true;
+}
+
 void Universe::addObject() {
     objList.push_back(Body());
     objList.back().randVelocity();
@@ -30,6 +39,7 @@ void Universe::addObject(double x, double y, double z,
 	objList.push_back(Body(x,y,z,dx,dy,dz,m));
 }
 
+//Add object in auto-computed orbit around a body
 void Universe::addObject(double x, double y, double z,
 			   double m, Body* b) {
 
@@ -47,16 +57,41 @@ void Universe::addTime(double timestep) {
 	while(!noMerges) {
 		noMerges = true;
 		for(it1 = objList.begin(); it1 != objList.end(); ++it1) {
+			
+			//Ignore static objects
+			if((*it1).isStatic) continue;
+			
 			for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
+				
+				//Ignore static objects
+				if((*it2).isStatic) continue;
+				
 				if(it1 != it2) {
 					if(computeDistance(*it1,*it2) < (*it1).radius + (*it2).radius) {
-						if (it1 == objList.begin()) {
-							objList.push_front(mergeBodies(*it1,*it2));
-						} else {
-							objList.push_back(mergeBodies(*it1,*it2));
-						}
-						objList.erase(it1);
+						
+						//Update variables
+						double m = (*it1).mass + (*it2).mass;
+						(*it1).Xpos = ((*it1).mass*(*it1).Xpos + (*it2).mass*(*it2).Xpos)/m;
+						(*it1).Ypos = ((*it1).mass*(*it1).Ypos + (*it2).mass*(*it2).Ypos)/m;
+						(*it1).Zpos = ((*it1).mass*(*it1).Zpos + (*it2).mass*(*it2).Zpos)/m;
+						(*it1).dXpos = ((*it1).mass*(*it1).dXpos + (*it2).mass*(*it2).dXpos)/m;
+						(*it1).dYpos = ((*it1).mass*(*it1).dYpos + (*it2).mass*(*it2).dYpos)/m;
+						(*it1).dZpos = ((*it1).mass*(*it1).dZpos + (*it2).mass*(*it2).dZpos)/m;
+						(*it1).mass = m;
+						(*it1).updateRadius();
+
+						//Clear the trail
+						(*it1).trailIndex = (*it1).trail.size()-1;
+						(*it1).trailLength = 0;
+
+						//Erase the last object
+						
+						//(*it2).mass = 0;
+						//(*it2).updateRadius();
+						//(*it2).isStatic = true;
+						
 						objList.erase(it2);
+						
 						noMerges = false;
 						break;
 					}
@@ -92,7 +127,7 @@ void Universe::addTime(double timestep) {
     }
 }
 
-double Universe::computeDistance(Body a, Body b) {
+double Universe::computeDistance(Body &a, Body &b) {
     double dX = a.Xpos - b.Xpos;
     double dY = a.Ypos - b.Ypos;
     double dZ = a.Zpos - b.Zpos;
@@ -115,7 +150,7 @@ Body Universe::mergeBodies(Body a, Body b) {
 }
 
 //Draws all objects in the universe
-void Universe::draw() {
+void Universe::draw(bool showTrails) {
 
 	//Draw stars
 	glColor3f(1.0, 1.0, 1.0);
@@ -129,7 +164,7 @@ void Universe::draw() {
 	//Draw all objects
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
-        (*it).draw();
+        (*it).draw(showTrails);
     }
 
 	//Draw proxy if necessary
@@ -139,12 +174,16 @@ void Universe::draw() {
 		glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
 		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
 		glEnd();
-		proxy.draw();
+		proxy.draw(showTrails);
 	}
 }
 
 void Universe::clear() {
     objList.clear();
+
+	//Add home object
+	addObject(0,0,0,0,0,0,0);
+	objList.front().isStatic = true;
 }
 
 void Universe::createStars() {
@@ -192,38 +231,53 @@ void Universe::drawSelectors() {
 }
 
 void Universe::selectObject(double x, double y, double z) {
-	double minDist = 10000000000;
-	std::list<Body>::iterator closest = objList.begin();
-	Point p1(x,y,z);
-
-	std::list<Body>::iterator it;
-    for(it = objList.begin(); it != objList.end(); ++it) {
-		Point p2((*it).Xpos, (*it).Ypos, (*it).Zpos);
-		double d = p1.dist(p2);
-		if(d < minDist) {
-			minDist = d;
-			closest = it;
-		}
-    }
-
-	//if(minDist < (*closest).radius) {
 	
-		//Move closest object to the front of the list
-		Body temp = *closest;
-		objList.erase(closest);
-		objList.push_front(temp);
+	if(objList.size() > 0) {
+	
+		double minDist = 10000000000;
+		std::list<Body>::iterator closest = objList.begin();
+		Point p1(x,y,z);
 
-	//}
+		std::list<Body>::iterator it;
+		for(it = objList.begin(); it != objList.end(); ++it) {
+			Point p2((*it).Xpos, (*it).Ypos, (*it).Zpos);
+			double d = p1.dist(p2);
+			if(d < minDist) {
+				minDist = d;
+				closest = it;
+			}
+		}
+
+		if(minDist <= (*closest).radius) {
+	
+			//Move closest object to the front of the list
+			Body temp = *closest;
+			objList.erase(closest);
+			objList.push_front(temp);
+
+		}
+	}
 }
 
 double Universe::computeForce(double x, double y, double z) {
 
-	Body b(x,y,z);
 	double f = 0;
 
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
-		f += (b).computeForce(*it, 0);
+		
+		
+		double eps = 0.0001;
+		double G = 0.1;
+
+		double dX = x - (*it).Xpos;
+		double dY = y - (*it).Ypos;
+		double dZ = z - (*it).Zpos;
+
+		double dist2 = dX*dX + dY*dY + dZ*dZ;
+		double dist = sqrt(dist2);
+
+		f += -G*(*it).mass/(dist2 + eps);
     }
 
 	return f;

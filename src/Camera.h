@@ -21,6 +21,9 @@ class Camera
 		double fov, nearClip, farClip;
 		double dx, dy, dz;
 
+		//Tweening
+		double camXtarget, camYtarget, camZtarget;
+
 };
 
 class GlWindow;

@@ -17,6 +17,8 @@
 #include <cmath>
 #include "Body.h"
 
+#define INITIAL_TRAIL_LENGTH 100
+
 //Constructor to place a body at a random location
 Body::Body() {
 
@@ -33,9 +35,17 @@ Body::Body() {
     mass = 1.0;
 
 	//Compute radius
-    radius = pow(3*mass/(4*PI),0.33333);
+    updateRadius();
 
 	selected = false;
+	isStatic = false;
+
+	trail.resize(INITIAL_TRAIL_LENGTH, Point());
+	trailAlpha.clear();
+	for(int i = 0; i < trail.size(); i++)
+		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
+	trailIndex = trail.size()-1;
+	trailLength = 0;
 
     stop();
 
@@ -56,9 +66,17 @@ Body::Body(double x, double y, double z) {
     mass = 1.0;
 
 	//Compute radius
-    radius = pow(3*mass/(4*PI),0.33333);
+    updateRadius();
 
 	selected = false;
+	isStatic = false;
+
+	trail.resize(INITIAL_TRAIL_LENGTH, Point());
+	trailAlpha.clear();
+	for(int i = 0; i < trail.size(); i++)
+		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
+	trailIndex = trail.size()-1;
+	trailLength = 0;
 
     stop();
 
@@ -82,9 +100,17 @@ Body::Body(double x, double y, double z,
     mass = m;
 
 	//Compute radius
-    radius = pow(3*mass/(4*PI),0.33333);
+    updateRadius();
 
 	selected = false;
+	isStatic = false;
+
+	trail.resize(INITIAL_TRAIL_LENGTH, Point());
+	trailAlpha.clear();
+	for(int i = 0; i < trail.size(); i++)
+		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
+	trailIndex = trail.size()-1;
+	trailLength = 0;
 
     stop();
 
@@ -103,6 +129,10 @@ void Body::stop() {
     dZrot = 0.0;
 }
 
+void Body::updateRadius() {
+	radius = pow(3*mass/(4*PI),0.33333);
+}
+
 //Gives the body random velocities
 void Body::randVelocity() {
 
@@ -115,6 +145,9 @@ void Body::randVelocity() {
 
 //Updates the velocity to reflect the force from another body
 double Body::computeForce(Body &b, double timestep) {
+
+	if(isStatic)
+		return 0;
 
     double eps = 0.0001;
 	double G = 0.1;
@@ -136,13 +169,18 @@ double Body::computeForce(Body &b, double timestep) {
 }
 
 //Draws the body
-void Body::draw() {
+void Body::draw(bool showTrails) {
 
     //Save current transformation
     glPushMatrix();
 
-
-    //drawHistory();
+	if(showTrails && !isStatic)
+		drawHistory();
+	else {
+		//Clear the trail
+		trailIndex = trail.size()-1;
+		trailLength = 0;;
+	}
 
 	//Move object
     glTranslatef(Xpos, Ypos, Zpos);
@@ -176,11 +214,32 @@ void Body::drawShape() {
 void Body::drawHistory() {
 
     //Update the trail history
-    Point thisPoint(Xpos, Ypos, Zpos);
-    
-	bool addPoint = false;
+    //Point thisPoint(Xpos, Ypos, Zpos);
+	//trail[trailIndex] = thisPoint;
+
+	trail[trailIndex].X = Xpos;
+	trail[trailIndex].Y = Ypos;
+	trail[trailIndex].Z = Zpos;
+	if(trailLength < trail.size())
+		trailLength++;
+
+	//Draw trail
+	glBegin(GL_LINE_STRIP);
+	for(int i = 0; i < trailLength; ++i) {
+		int index = (trailIndex+i)%trail.size();
+		glColor4f(1.0, 1.0, 1.0, trailAlpha[i]);
+        glVertex3f(trail[index].X, trail[index].Y, trail[index].Z);
+	}
+	glEnd();
+
+	//Update index
+	trailIndex--;
+	if(trailIndex < 0)
+		trailIndex = trail.size() - 1;
 
 	/*
+	bool addPoint = false;
+	
 	if(trail.empty()) {
 		addPoint = true;
 	}
@@ -195,7 +254,7 @@ void Body::drawHistory() {
 			trail.pop_front();
 
 	}
-	*/
+	
 
 	trail.push_back(thisPoint);
 	if(trail.size() > 100)
@@ -211,7 +270,7 @@ void Body::drawHistory() {
         glVertex3f((*it).X, (*it).Y, (*it).Z);
     }
     glEnd();
-
+	*/
 }
 
 

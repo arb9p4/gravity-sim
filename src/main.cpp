@@ -36,6 +36,7 @@ class GravitySimApp {
 	static void clearScene(Fl_Widget *w, void *data) {
         GravitySimApp *o = (GravitySimApp*)data;
         o->view->theUniverse.clear();
+		o->view->resetCamera();
     }
 
 	/*** Menu callback functions ***/

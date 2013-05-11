@@ -27,13 +27,7 @@ Body proxy;
 Point proxyVector;
 bool drawProxy;
 
-Universe() {
-	drawProxy = false;
-	createStars();
-
-	//Add default object
-	//addObject(0,0,0);
-}
+Universe();
 
 //Add object at random location
 void addObject();
@@ -53,11 +47,11 @@ void addObject(double x, double y, double z, double m, Body* b);
 
 void addTime(double timestep);
 
-double computeDistance(Body a, Body b);
+double computeDistance(Body &a, Body &b);
 
 Body mergeBodies(Body a, Body b);
 
-void draw();
+void draw(bool showTrails);
 
 void clear();
 

@@ -40,7 +40,7 @@ class GlWindow : public Fl_Gl_Window {
 	//Handle events
 	int handle(int Fl_event);
 
-	void displayMe(Camera, bool);
+	void displayMe(Camera, bool, bool, double);
 
 public:
 
@@ -55,6 +55,7 @@ public:
 	int shiftKey;
 	int keyLBracket, keyRBracket;
 	int keyPlus, keyMinus;
+	int keyLeft, keyRight, keyUp, keyDown;
 
 	//Mouse position
     double mouseX, mouseY;		//Current position
@@ -62,19 +63,25 @@ public:
 	double cursorX, cursorY;	//Cursor position
 	bool secWin;
 	double clickX, clickY;		//Clicked point
-	double clickX2, clickY2;		//Clicked point
+	double clickX2, clickY2;	//Clicked point
 	int mouseButton;			//Which mouse button was last clicked
 	int addObj;					//0: not adding; 1: clicked; 2: released
-
 
 	//Camera parameters
 	Camera cam1;
 	Camera cam2;
+	int windowMode;		//0: Single window; 1: Add overlay
 
-	double camDist;		//Distance of the camera from object (set by mouse wheel)
+	double camDist1;		//Distance of the camera from object (set by mouse wheel)
+	double camDist2;		//Distance of the camera from object (set by mouse wheel)
+	double camDist1target;
+	double camDist2target;
 	bool updateFocus;	//True if the focus object should be updated
 
 	double timestep;
+
+	int forceGridSize;
+	double forceGridResolution;
 
     /*
     int moveMode;	//Moving camera or object
@@ -88,6 +95,7 @@ public:
 	bool showInfo;	//Display diagnostic information on the screen
 	bool showGrid;	//Display the grid
 	bool showForceGrid;	//Display the force grid
+	bool showTrails;	//True if trails should be drawn
 
 	//Help window objects
 	Fl_Window *helpWindow;
@@ -102,6 +110,8 @@ public:
 
 	//Called on close to ensure that the help dialog is also closed
 	void hide();
+
+	void resetCamera();
 };
 
 #endif

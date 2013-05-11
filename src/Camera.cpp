@@ -9,8 +9,8 @@ Camera::Camera()
 	camZ = -15.0;
 
     //Initialize camera rotation
-	rotX = 60.0;
-	rotY = 0.0;
+	rotX = 45.0;
+	rotY = -45.0;
 	rotZ = 0.0;
 
     //Initialize clipping planes
@@ -19,6 +19,9 @@ Camera::Camera()
 	farClip = 1000000.0;
 
 	dx = dy = dz = 0.0;
+
+
+	camXtarget = camYtarget = camZtarget = 0.0;
 
 }
 

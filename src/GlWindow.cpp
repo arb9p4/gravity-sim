@@ -52,8 +52,10 @@ void animate(void* pData) {
 		
 		//Update clipping planes
 		pWindow->cam1.updateClipping(fov, nearClip, farClip);
+
 		//Update camera translation
 		pWindow->cam1.updateTranslation(camX, camY, camZ);
+		
 		//Update camera rotation
 		if (pWindow->secWin) {
 			pWindow->cam2.updateRotation(rotX, rotY, rotZ);
@@ -65,10 +67,18 @@ void animate(void* pData) {
 
 		// simple check to see if there is a planet, then follows the first planet in the list.
 		if (pWindow->theUniverse.objList.size() > 0) {
-			pWindow->cam2.camX = pWindow->theUniverse.objList.front().Xpos;
-			pWindow->cam2.camY = pWindow->theUniverse.objList.front().Ypos;
-			pWindow->cam2.camZ = pWindow->theUniverse.objList.front().Zpos;
-			
+			pWindow->cam2.camXtarget = pWindow->theUniverse.objList.front().Xpos;
+			pWindow->cam2.camYtarget = pWindow->theUniverse.objList.front().Ypos;
+			pWindow->cam2.camZtarget = pWindow->theUniverse.objList.front().Zpos;
+
+			//Tweening
+			double tweenRate = 0.5;
+			pWindow->cam2.camX += (pWindow->cam2.camXtarget - pWindow->cam2.camX) * tweenRate;
+			pWindow->cam2.camY += (pWindow->cam2.camYtarget - pWindow->cam2.camY) * tweenRate;
+			pWindow->cam2.camZ += (pWindow->cam2.camZtarget - pWindow->cam2.camZ) * tweenRate;
+			pWindow->camDist1 += (pWindow->camDist1target - pWindow->camDist1) * tweenRate;
+			pWindow->camDist2 += (pWindow->camDist2target - pWindow->camDist2) * tweenRate;
+
 			pWindow->cam2.dx = pWindow->theUniverse.objList.front().dXpos;
 			pWindow->cam2.dy = pWindow->theUniverse.objList.front().dYpos;
 			pWindow->cam2.dz = pWindow->theUniverse.objList.front().dZpos;
@@ -112,13 +122,13 @@ void GlWindow::initialize(int W,int H) {
 	
 }
 
-double GlWindow::normalize(double x, double y, double z) {
+double normalize(double x, double y, double z) {
 	return sqrt((x*x) + (y*y) + (z*z));
 }
 
 // split out drawing function so that you could draw multiple cameras,
 // then specifiy lookAt = true to follow a planet.
-void GlWindow::displayMe(Camera camNew, bool lookAt) {
+void GlWindow::displayMe(Camera camNew, bool lookAt, bool showInfoOverlay, double camDist) {
 	
     //Initialize projection matrix
 	glMatrixMode(GL_PROJECTION);
@@ -131,6 +141,23 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 	glLoadIdentity();
 
 	if (lookAt) {
+		// TODO fix this
+		gluLookAt(
+			cam2.camX, cam2.camY, cam2.camZ+camDist, 
+			cam2.camX, cam2.camY, cam2.camZ, 
+			0, 1, 0);
+		glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
+		//glRotatef(camNew.rotZ, 0.0, 0.0, 1.0);
+		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
+		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
+		
+		glTranslatef(-cam2.camX, -cam2.camY, -cam2.camZ);
+			
+			//glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
+
+
+		/*
+
 		// TODO fix this
 
 		// normalize velocity
@@ -176,8 +203,6 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
 	}
 
-	
-
     //Draw grid
 	if(showGrid) {
 		
@@ -194,43 +219,120 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 			glVertex3f(100.0, 0.0, i);
 		}
 		
-		
+		glEnd();
 		
 		//Draw axes
-		glColor3f(0.6, 0.3, 0.3);
-		glVertex3f(0, 0, 0);
-		glVertex3f(10, 0, 0);
+		double axisWidth = 0.03;
+		double axisLength = 100;
 
-		glColor3f(0.3, 0.6, 0.3);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 10, 0);
-
-		glColor3f(0.3, 0.3, 0.6);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 0, 10);
+		glBegin(GL_QUADS);
+		glColor3f(0.5, 0.5, 0.5);
+		glVertex3f(-axisWidth, -axisWidth, -axisWidth);
+		glVertex3f(-axisWidth,  axisWidth, -axisWidth);
+		glVertex3f(-axisWidth,  axisWidth,  axisWidth);
+		glVertex3f(-axisWidth, -axisWidth,  axisWidth);
+		glVertex3f(-axisWidth, -axisWidth, -axisWidth);
+		glVertex3f( axisWidth, -axisWidth, -axisWidth);
+		glVertex3f( axisWidth, -axisWidth,  axisWidth);
+		glVertex3f(-axisWidth, -axisWidth,  axisWidth);
+		glVertex3f(-axisWidth, -axisWidth, -axisWidth);
+		glVertex3f( axisWidth, -axisWidth, -axisWidth);
+		glVertex3f( axisWidth,  axisWidth, -axisWidth);
+		glVertex3f(-axisWidth,  axisWidth, -axisWidth);
 		glEnd();
 
+		glColor3f(0.6, 0.3, 0.3);
+		glBegin(GL_QUAD_STRIP);
+		glVertex3f(axisWidth , -axisWidth, -axisWidth);
+		glVertex3f(axisLength, -axisWidth, -axisWidth);
+		glVertex3f(axisWidth ,  axisWidth, -axisWidth);
+		glVertex3f(axisLength,  axisWidth, -axisWidth);
+		glVertex3f(axisWidth ,  axisWidth,  axisWidth);
+		glVertex3f(axisLength,  axisWidth,  axisWidth);
+		glVertex3f(axisWidth , -axisWidth,  axisWidth);
+		glVertex3f(axisLength, -axisWidth,  axisWidth);
+		glVertex3f(axisWidth , -axisWidth, -axisWidth);
+		glVertex3f(axisLength, -axisWidth, -axisWidth);
+		glEnd();
+		glBegin(GL_QUADS);
+		glVertex3f(axisLength, -axisWidth, -axisWidth);
+		glVertex3f(axisLength,  axisWidth, -axisWidth);
+		glVertex3f(axisLength,  axisWidth,  axisWidth);
+		glVertex3f(axisLength, -axisWidth,  axisWidth);
+		glEnd();
+
+		glColor3f(0.3, 0.6, 0.3);
+		glBegin(GL_QUAD_STRIP);
+		glVertex3f(-axisWidth, axisWidth , -axisWidth);
+		glVertex3f(-axisWidth, axisLength, -axisWidth);
+		glVertex3f( axisWidth, axisWidth , -axisWidth);
+		glVertex3f( axisWidth, axisLength, -axisWidth);
+		glVertex3f( axisWidth, axisWidth ,  axisWidth);
+		glVertex3f( axisWidth, axisLength,  axisWidth);
+		glVertex3f(-axisWidth, axisWidth ,  axisWidth);
+		glVertex3f(-axisWidth, axisLength,  axisWidth);
+		glVertex3f(-axisWidth, axisWidth , -axisWidth);
+		glVertex3f(-axisWidth, axisLength, -axisWidth);
+		glEnd();
+		glBegin(GL_QUADS);
+		glVertex3f(-axisWidth, axisLength, -axisWidth);
+		glVertex3f( axisWidth, axisLength, -axisWidth);
+		glVertex3f( axisWidth, axisLength,  axisWidth);
+		glVertex3f(-axisWidth, axisLength,  axisWidth);
+		glEnd();
+
+		glColor3f(0.3, 0.3, 0.6);
+		glBegin(GL_QUAD_STRIP);
+		glVertex3f(-axisWidth, -axisWidth, axisWidth );
+		glVertex3f(-axisWidth, -axisWidth, axisLength);
+		glVertex3f( axisWidth, -axisWidth, axisWidth );
+		glVertex3f( axisWidth, -axisWidth, axisLength);
+		glVertex3f( axisWidth,  axisWidth, axisWidth );
+		glVertex3f( axisWidth,  axisWidth, axisLength);
+		glVertex3f(-axisWidth,  axisWidth, axisWidth );
+		glVertex3f(-axisWidth,  axisWidth, axisLength);
+		glVertex3f(-axisWidth, -axisWidth, axisWidth );
+		glVertex3f(-axisWidth, -axisWidth, axisLength);
+		glEnd();
+		glBegin(GL_QUADS);
+		glVertex3f(-axisWidth, -axisWidth, axisLength);
+		glVertex3f( axisWidth, -axisWidth, axisLength);
+		glVertex3f( axisWidth,  axisWidth, axisLength);
+		glVertex3f(-axisWidth,  axisWidth, axisLength);
+		glEnd();
+		
 	}
 
 	if(showForceGrid) {
 
-		int forceGridSize = 51;				//Number of grid lines to draw
-		double forceGridResolution = 0.25;	//Distance between grid lines
-
 		double forceGridOffset = -(forceGridSize-1)*forceGridResolution/2.0;
+		
+
+		double offsetX = 0;
+		double offsetY = 0;
+		double offsetZ = 0;
+
+		if(theUniverse.objList.size() > 0 && 0) {
+			offsetX = theUniverse.objList.front().Xpos;
+			offsetY = theUniverse.objList.front().Ypos;
+			offsetZ = theUniverse.objList.front().Zpos;
+		}
+
 
 		std::vector<std::vector<double> > forces(forceGridSize, std::vector<double>(forceGridSize, 0));
 		
 		double f;
 		for(int i = 0; i < forceGridSize; ++i) {
 			for(int j = 0; j < forceGridSize; ++j) {
-				f = theUniverse.computeForce(forceGridOffset+i*forceGridResolution,0,
-					                                    forceGridOffset+j*forceGridResolution);
-				forces[i][j] = -2*sqrt(abs(f));
+				f = theUniverse.computeForce(offsetX+forceGridOffset+i*forceGridResolution,offsetY,
+					                         offsetZ+forceGridOffset+j*forceGridResolution);
+				//forces[i][j] = max(-2*sqrt(sqrt(abs(f))), -100);
+				forces[i][j] = -log(10*abs(f)+1);
 				//forces[i][j] = f;
 			}
 		}
 
+		//Smooth grid
 		std::vector<std::vector<double> > forcesOld(forces);
 		int count;
 		for(int i = 0; i < forceGridSize; ++i) {
@@ -254,21 +356,21 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		for(int i = 0; i < forceGridSize; ++i) {
 			glBegin(GL_LINE_STRIP);
 			for(int j = 0; j < forceGridSize; ++j) {
-				glVertex3f(forceGridOffset+i*forceGridResolution, -1+forces[i][j], 
-					       forceGridOffset+j*forceGridResolution);
+				glVertex3f(offsetX+forceGridOffset+i*forceGridResolution, offsetY-1+forces[i][j], 
+					       offsetZ+forceGridOffset+j*forceGridResolution);
 			}
 			glEnd();
 		}
 		for(int j = 0; j < forceGridSize; ++j) {
 			glBegin(GL_LINE_STRIP);
 			for(int i = 0; i < forceGridSize; ++i) {
-				glVertex3f(forceGridOffset+i*forceGridResolution, -1+forces[i][j],
-					       forceGridOffset+j*forceGridResolution);
+				glVertex3f(offsetX+forceGridOffset+i*forceGridResolution, offsetY-1+forces[i][j], 
+					       offsetZ+forceGridOffset+j*forceGridResolution);
 			}
 			glEnd();
 		}
 		
-		
+
 	}
 
 	/* Turns out this may not be necessary after all, but could come in handy later
@@ -292,7 +394,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 	
 
 	//Draw objects
-	theUniverse.draw();
+	theUniverse.draw(showTrails);
 
 	if(showGrid)
 		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
@@ -355,9 +457,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 
 		double speedScale = 0.1;
 
-		double dx = (posX2 - posX)*speedScale;
-		double dy = (posY2 - posY)*speedScale;
-		double dz = (posZ2 - posZ)*speedScale;
+		
 
 
 
@@ -369,11 +469,25 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 
 		}
 		else if(addObj == 2) {
+			if(shiftKey) {
+				theUniverse.proxy.mass *= 1.1;
+				theUniverse.proxy.updateRadius();
+			}
 			theUniverse.setProxyVector(posX2,posY2,posZ2);
 		}
 		else if(addObj == 3) {
 
-			theUniverse.addObject(posX, posY, posZ, dx, 0, dz, 1.0);
+			double posX = theUniverse.proxy.Xpos;
+			double posY = theUniverse.proxy.Ypos;
+			double posZ = theUniverse.proxy.Zpos;
+
+			double dx = (posX2 - posX)*speedScale;
+			double dy = (posY2 - posY)*speedScale;
+			double dz = (posZ2 - posZ)*speedScale;
+
+			double m = theUniverse.proxy.mass;
+
+			theUniverse.addObject(posX, posY, posZ, dx, 0, dz, m);
 			theUniverse.clearProxy();
 
 			addObj = 0;
@@ -381,7 +495,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 	}
 
 	//Display info on screen
-	if(showInfo && lookAt) {
+	if(showInfoOverlay) {
 
 		//Prepare camera for text overlay
 		glMatrixMode(GL_PROJECTION);
@@ -412,7 +526,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
-		sprintf(buffer, "# of Objects: %i", theUniverse.objList.size());
+		sprintf(buffer, "# of Objects: %i", theUniverse.objList.size()-1);
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
@@ -420,13 +534,28 @@ void GlWindow::displayMe(Camera camNew, bool lookAt) {
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
-		sprintf(buffer, "Clicked Point: %.0f %.0f", clickX, clickY);
+		sprintf(buffer, "Click Point: %.0f %.0f", clickX, clickY);
 		printString(2, currentLine, buffer);
 
 		currentLine += lineHeight;
-		sprintf(buffer, "Drag Point: %.0f %.0f", clickX2, clickY2);
+		sprintf(buffer, "Click2 Point: %.0f %.0f", clickX2, clickY2);
 		printString(2, currentLine, buffer);
 
+		currentLine += lineHeight;
+		sprintf(buffer, "Mouse Point: %.0f %.0f", mouseX, mouseY);
+		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "Mouse2 Point: %.0f %.0f", mouseX2, mouseY2);
+		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "Cursor Point: %.0f %.0f", cursorX, cursorY);
+		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "addObj: %d", addObj);
+		printString(2, currentLine, buffer);
 	}
 }
 
@@ -438,20 +567,20 @@ void GlWindow::draw() {
 
 	// draw original scene on whole screen
 	glViewport(0,0,w(), h());
-    GlWindow::displayMe(cam1, true);
+    GlWindow::displayMe(cam1, true, showInfo, camDist1);
 
-	/*
+	if(windowMode == 1) {
 
-	// draw second scene in the top right corner
-	glViewport(w()/2, h()/2, w()/2, h()/2);
-	// used so I could clear only the top right of the screen
-	glEnable(GL_SCISSOR_TEST);
-	glScissor(w()/2, h()/2, w()/2, h()/2);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	GlWindow::displayMe(cam2, true);
-	glDisable(GL_SCISSOR_TEST);
+		// draw second scene in the top right corner
+		glViewport(w()/2, h()/2, w()/2, h()/2);
+		// used so I could clear only the top right of the screen
+		glEnable(GL_SCISSOR_TEST);
+		glScissor(w()/2, h()/2, w()/2, h()/2);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		GlWindow::displayMe(cam2, true, false, camDist2);
+		glDisable(GL_SCISSOR_TEST);
 
-	*/
+	}
 
 	glFlush();
 
@@ -491,13 +620,19 @@ int GlWindow::handle(int Fl_event) {
 		return 1;
 
 	case FL_DRAG:
-		if(mouseButton == 1) {
-			mouseX = Fl::event_x();
-			mouseY = Fl::event_y();
-		}
-		else {
+		
+		if(addObj > 0) {
+
+			//Adding object
 			clickX2 = Fl::event_x();
 			clickY2 = Fl::event_y();
+		} 
+		else {
+
+			//Rotating camera
+			mouseX = Fl::event_x();
+			mouseY = Fl::event_y();
+
 		}
 
         return 1;
@@ -513,16 +648,19 @@ int GlWindow::handle(int Fl_event) {
 			mouseY2 = mouseY;
 
 			mouseButton = 1;
-			if (mouseX > w()/2 && mouseY < h()/2 && !secWin) {
-				//secWin = true;
+			if (mouseX > w()/2 && mouseY < h()/2 && !secWin && windowMode == 1) {
+				secWin = true;
 			}
+
+			updateFocus = true;
 			return 1;
 		
 		case FL_MIDDLE_MOUSE:
-			updateFocus = true;
+			
 			return 1;
 
 		case FL_RIGHT_MOUSE:
+			
 			
 			clickX = Fl::event_x();
 			clickY = Fl::event_y();
@@ -530,6 +668,7 @@ int GlWindow::handle(int Fl_event) {
 			clickY2 = clickY;
 			mouseButton = 2;
 			addObj = 1;
+			
 
 			return 1;
 		}
@@ -538,13 +677,21 @@ int GlWindow::handle(int Fl_event) {
 	case FL_RELEASE:
 		secWin = false;
 		
-		if(addObj == 2)
+		if(addObj == 2 && Fl::event_button() == FL_RIGHT_MOUSE)
 			addObj = 3;
+		else if(addObj == 2 && Fl::event_button() != FL_RIGHT_MOUSE)
+			return 0;
 
 		return 1;
 
 	case FL_MOUSEWHEEL:
-		camDist += 0.1*camDist*Fl::event_dy();
+		if (cursorX > w()/2 && cursorY < h()/2 && !secWin && windowMode == 1) {
+			camDist2target += 0.1*camDist2target*Fl::event_dy();
+		}
+		else {
+			camDist1target += 0.1*camDist1target*Fl::event_dy();
+		}
+		
 
 		return 1;
 
@@ -576,6 +723,37 @@ int GlWindow::handle(int Fl_event) {
 		case FL_F+5:
             //Toggle force grid
 			showForceGrid = !showForceGrid;
+			return 1;
+
+		case FL_F+6:
+            //Toggle window mode
+			windowMode = (windowMode+1)%2;
+			return 1;
+
+		case FL_F+7:
+			//Toggle trail history
+			showTrails = !showTrails;
+			return 1;
+
+		case FL_Home:
+			//Set the origin as the focus
+			theUniverse.selectObject(0,0,0);
+			return 1;
+		
+		case FL_Left:
+			forceGridSize = (int)ceil(forceGridSize * 0.8);
+			return 1;
+
+		case FL_Right:
+			forceGridSize = (int)ceil(forceGridSize * 1.25);
+			return 1;
+
+		case FL_Down:
+			forceGridResolution *= 0.8;
+			return 1;
+
+		case FL_Up:
+			forceGridResolution *= 1.25;
 			return 1;
 
         case ' ':
@@ -777,15 +955,23 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	mouseButton = 1;
 	addObj = 0;
 
-	camDist = 10.0;
+	windowMode = 0;
+
+	camDist1 = camDist2 = 20.0;
+	camDist1target = camDist2target = 20.0;
 	updateFocus = false;
+	
 
 	timestep = (1.0/30.0)*10;
+
+	forceGridSize = 51;
+	forceGridResolution = 0.25;
 
     //Initialize other variables
 	showInfo = true;
 	showGrid = true;
-	showForceGrid = true;
+	showForceGrid = false;
+	showTrails = true;
 
     //Create initial timer
 	Fl::add_timeout(1.0/30.0, animate, this);
@@ -840,4 +1026,15 @@ void GlWindow::showHelp() {
 void GlWindow::hide() {
 	Fl_Gl_Window::hide();
 	helpWindow->hide();
+}
+
+void GlWindow::resetCamera() {
+	camDist1 = camDist2 = 20.0;
+	camDist1target = camDist2target = 20.0;
+
+	cam1.rotX = 45.0;
+	cam1.rotY = -45.0;
+
+	cam2.rotX = 45.0;
+	cam2.rotY = -45.0;
 }
