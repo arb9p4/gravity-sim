@@ -104,9 +104,5 @@ void drawHistory();
 //Draws a transparent hull around the body used for selection
 void drawSelector();
 
-// texture
-GLuint texture;
-void Body::DisplaySphere (double R, GLuint texture);
-
 };
 #endif

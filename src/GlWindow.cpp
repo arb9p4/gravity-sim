@@ -139,10 +139,11 @@ void GlWindow::initialize(int W,int H) {
 	glEnable(GL_DEPTH_TEST);
 
 	glEnable( GL_TEXTURE_2D );
+	glDepthFunc(GL_LEQUAL);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 	glEnable(GL_CULL_FACE);
-	glDepthFunc(GL_LEQUAL);
+	
     
 	texture[0] = LoadTextureRAW( "earth.raw" );
 

@@ -47,6 +47,8 @@ Body::Body() {
 	trailIndex = trail.size()-1;
 	trailLength = 0;
 
+	//CreateSphere(70,0,0,0);
+
     stop();
 
     //theAsteroid = Asteroid();
@@ -201,110 +203,16 @@ void Body::draw(bool showTrails, GLuint texture) {
     glPopMatrix();
 }
 
-//texture stuff
-typedef struct 
-{
-    
-int X;
-    
-int Y;
-    
-int Z;
-    
-
-    
-double U;
-    
-double V;
-}VERTICES;
-
-const int space = 10;
-const int VertexCount = (90 / space) * (360 / space) * 4;
-VERTICES VERTEX[VertexCount];
-
-
-void CreateSphere (double R, double H, double K, double Z) {
-	int n;
-	double a;
-	double b;
-	n = 0;
-	for( b = 0; b <= 90 - space; b+=space){
-		for( a = 0; a <= 360 - space; a+=space){     
-			VERTEX[n].X = R * sin((a) / 180 * PI) * sin((b) / 180 * PI) - H;
-			VERTEX[n].Y = R * cos((a) / 180 * PI) * sin((b) / 180 * PI) + K;
-			VERTEX[n].Z = R * cos((b) / 180 * PI) - Z;
-			VERTEX[n].V = (2 * b) / 360;
-			VERTEX[n].U = (a) / 360;
-			n++;   
-			VERTEX[n].X = R * sin((a) / 180 * PI) * sin((b + space) / 180 * PI) - H;
-			VERTEX[n].Y = R * cos((a) / 180 * PI) * sin((b + space) / 180 * PI) + K;
-			VERTEX[n].Z = R * cos((b + space) / 180 * PI) - Z;
-			VERTEX[n].V = (2 * (b + space)) / 360;
-			VERTEX[n].U = (a) / 360;
-			n++;
-			VERTEX[n].X = R * sin((a + space) / 180 * PI) * sin((b) / 180 * PI) - H;
-			VERTEX[n].Y = R * cos((a + space) / 180 * PI) * sin((b) / 180 * PI) + K;
-			VERTEX[n].Z = R * cos((b) / 180 * PI) - Z;
-			VERTEX[n].V = (2 * b) / 360;
-			VERTEX[n].U = (a + space) / 360;
-			n++;
-            
-			VERTEX[n].X = R * sin((a + space) / 180 * PI) * sin((b + space) / 180 * PI) - H;
-			VERTEX[n].Y = R * cos((a + space) / 180 * PI) * sin((b + space) / 
-			180 * PI) + K;
-			VERTEX[n].Z = R * cos((b + space) / 180 * PI) - Z;
-			VERTEX[n].V = (2 * (b + space)) / 360;
-			VERTEX[n].U = (a + space) / 360;
-			n++; 
-		}
-	}
-}
-
-void Body::DisplaySphere (double R, GLuint texture){
-    
-	int b;
-	glScalef (0.0125 * R, 0.0125 * R, 0.0125 * R);
-	glRotatef (90, 1, 0, 0);
-	glBindTexture (GL_TEXTURE_2D, texture);
-	glBegin (GL_TRIANGLE_STRIP);
-	for ( b = 0; b <= VertexCount; b++){
-		glTexCoord2f (VERTEX[b].U, VERTEX[b].V);
-		glVertex3f (VERTEX[b].X, VERTEX[b].Y, -VERTEX[b].Z);
-	}
-	for ( b = 0; b <= VertexCount; b++){
-		glTexCoord2f (VERTEX[b].U, -VERTEX[b].V);
-		glVertex3f (VERTEX[b].X, VERTEX[b].Y, VERTEX[b].Z);
-	}
-    
-	glEnd();
-}
-
 void Body::drawShape(GLuint texture) {
 
-	CreateSphere(70,0,0,0);
-
-	// change 10 to radius
-	DisplaySphere(10, texture);
-	
-
-	/*
 	glEnable(GL_LIGHTING);
-    //glColor3f(1.0, 0.0, 1.0);
-	glRotatef(90.0, 1.0, 0.0, 0.0);
-    //glutSolidSphere(radius, 20, 16);
-
-	GLUquadricObj *qObj = gluNewQuadric();
-	gluQuadricNormals(qObj, GLU_SMOOTH);
-	gluQuadricTexture(qObj, GL_TRUE);
-	glEnable(GL_TEXTURE_2D);
-
-	gluSphere(qObj, radius, 20, 16);
-
-
-
+	GLUquadric *quad = gluNewQuadric();
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glRotatef(90,1.0f,0.0f,0.0f);
+	gluQuadricTexture(quad,1);
+    gluSphere(quad,radius,20,16);
 	glDisable(GL_LIGHTING);
 
-	*/
 }
 
 
