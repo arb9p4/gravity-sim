@@ -13,6 +13,8 @@ class Camera
 		void updateClipping(double, double, double);
 		void updateTranslation(double, double, double);
 		void updateRotation(double, double, double);
+		void setTranslation(double, double, double);
+		void setTarget(double, double, double);
 		void draw();
 
 		//Camera parameters
@@ -21,8 +23,19 @@ class Camera
 		double fov, nearClip, farClip;
 		double dx, dy, dz;
 
+
 		//Tweening
 		double camXtarget, camYtarget, camZtarget;
+
+		double camDist;
+		double camDistTarget;
+
+		bool showInfoOverlay;	//Display diagnostic information on the screen
+		bool showGrid;	//Display the grid
+		bool showForceGrid;	//Display the force grid
+		bool showTrails;	//True if trails should be drawn
+
+		int cameraType;
 
 };
 

@@ -40,9 +40,12 @@ class GlWindow : public Fl_Gl_Window {
 	//Handle events
 	int handle(int Fl_event);
 
-	void displayMe(Camera, bool, bool, double);
+	void displayMe(Camera);
 
 public:
+
+	static const int PRIMARY_CAM;
+	static const int CHASE_CAM;
 
 	//Control sensitivity parameters
 	double moveSpeed, rotSpeed, scaleSpeed;
@@ -61,7 +64,6 @@ public:
     double mouseX, mouseY;		//Current position
     double mouseX2, mouseY2;	//Last position
 	double cursorX, cursorY;	//Cursor position
-	bool secWin;
 	double clickX, clickY;		//Clicked point
 	double clickX2, clickY2;	//Clicked point
 	int mouseButton;			//Which mouse button was last clicked
@@ -70,12 +72,7 @@ public:
 	//Camera parameters
 	Camera cam1;
 	Camera cam2;
-	int windowMode;		//0: Single window; 1: Add overlay
 
-	double camDist1;		//Distance of the camera from object (set by mouse wheel)
-	double camDist2;		//Distance of the camera from object (set by mouse wheel)
-	double camDist1target;
-	double camDist2target;
 	bool updateFocus;	//True if the focus object should be updated
 
 	double timestep;
@@ -92,10 +89,7 @@ public:
 
     Universe theUniverse;
 
-	bool showInfo;	//Display diagnostic information on the screen
-	bool showGrid;	//Display the grid
-	bool showForceGrid;	//Display the force grid
-	bool showTrails;	//True if trails should be drawn
+	bool showChaseCamera; //Display chase camera
 
 	//Help window objects
 	Fl_Window *helpWindow;

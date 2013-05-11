@@ -23,6 +23,13 @@ Camera::Camera()
 
 	camXtarget = camYtarget = camZtarget = 0.0;
 
+	showInfoOverlay = false;	//Display diagnostic information on the screen
+	showGrid = true;	//Display the grid
+	showForceGrid = false;	//Display the force grid
+	showTrails = true;	//True if trails should be drawn
+
+	camDist = 5.0;
+
 }
 
 void Camera::updateClipping(double fov1, double nearClip1, double farClip1) {
@@ -43,6 +50,17 @@ void Camera::updateTranslation(double camX1, double camY1, double camZ1) {
 	camZ += camZ1;
 }
 
+void Camera::setTranslation(double camX1, double camY1, double camZ1) {
+	camX = camX1;
+	camY = camY1;
+	camZ = camZ1;
+}
+
+void Camera::setTarget(double camX1, double camY1, double camZ1) {
+	camXtarget = camX1;
+	camYtarget = camY1;
+	camZtarget = camZ1;
+}
 
 Camera::~Camera(void)
 {

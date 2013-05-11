@@ -17,6 +17,9 @@ using namespace std;
 
 #define PI_180 0.01745329251994329576923690768489
 
+const int GlWindow::PRIMARY_CAM = 0;
+const int GlWindow::CHASE_CAM = 1;
+
 //Called each frame to update variables and redraw the screen
 void animate(void* pData) {
 	if (pData != NULL) {
@@ -55,45 +58,63 @@ void animate(void* pData) {
 
 		//Update camera translation
 		pWindow->cam1.updateTranslation(camX, camY, camZ);
-		
+
 		//Update camera rotation
-		if (pWindow->secWin) {
-			pWindow->cam2.updateRotation(rotX, rotY, rotZ);
-		} else {
-			pWindow->cam1.updateRotation(rotX, rotY, rotZ);
-		}
+		pWindow->cam1.updateRotation(rotX, rotY, rotZ);
+		
 
         pWindow->theUniverse.addTime(pWindow->timestep);
 
 		// simple check to see if there is a planet, then follows the first planet in the list.
+		//Tweening
+		double tweenRate = 0.5;
 		if (pWindow->theUniverse.objList.size() > 0) {
-			pWindow->cam2.camXtarget = pWindow->theUniverse.objList.front().Xpos;
-			pWindow->cam2.camYtarget = pWindow->theUniverse.objList.front().Ypos;
-			pWindow->cam2.camZtarget = pWindow->theUniverse.objList.front().Zpos;
+			
+			if (pWindow->theUniverse.objList.size() > 1) {
+			
+				cout << "set cam2" <<endl;
+				std::list<Body>::iterator it = pWindow->theUniverse.objList.begin();
+				it++;
+				pWindow->cam2.setTranslation(
+					it->Xpos,
+					it->Ypos,
+					it->Zpos
+				);
 
-			//Tweening
-			double tweenRate = 0.5;
-			pWindow->cam2.camX += (pWindow->cam2.camXtarget - pWindow->cam2.camX) * tweenRate;
-			pWindow->cam2.camY += (pWindow->cam2.camYtarget - pWindow->cam2.camY) * tweenRate;
-			pWindow->cam2.camZ += (pWindow->cam2.camZtarget - pWindow->cam2.camZ) * tweenRate;
-			pWindow->camDist1 += (pWindow->camDist1target - pWindow->camDist1) * tweenRate;
-			pWindow->camDist2 += (pWindow->camDist2target - pWindow->camDist2) * tweenRate;
+				pWindow->cam2.dx = it->dXpos;
+				pWindow->cam2.dy = it->dYpos;
+				pWindow->cam2.dz = it->dZpos;
 
-			pWindow->cam2.dx = pWindow->theUniverse.objList.front().dXpos;
-			pWindow->cam2.dy = pWindow->theUniverse.objList.front().dYpos;
-			pWindow->cam2.dz = pWindow->theUniverse.objList.front().dZpos;
-			//cout << pWindow->theUniverse.objList.front().dXpos << ", "<<
-			//	pWindow->theUniverse.objList.front().dYpos << ", " <<
-			//	pWindow->theUniverse.objList.front().dZpos << endl;
+				/*
+				pWindow->cam2.updateTranslation(
+					(pWindow->cam2.camXtarget - pWindow->cam2.camX) * tweenRate,
+					(pWindow->cam2.camYtarget - pWindow->cam2.camY) * tweenRate,
+					(pWindow->cam2.camZtarget - pWindow->cam2.camZ) * tweenRate
+				);
+				*/
+
+				//pWindow->cam2.camDist += (pWindow->cam2.camDistTarget - pWindow->cam2.camDist) * tweenRate;
+
+			}
+
+			pWindow->cam1.setTarget(
+				pWindow->theUniverse.objList.front().Xpos,
+				pWindow->theUniverse.objList.front().Ypos,
+				pWindow->theUniverse.objList.front().Zpos
+			);
+			// update tweens
+			pWindow->cam1.updateTranslation(
+				(pWindow->cam1.camXtarget - pWindow->cam1.camX) * tweenRate,
+				(pWindow->cam1.camYtarget - pWindow->cam1.camY) * tweenRate,
+				(pWindow->cam1.camZtarget - pWindow->cam1.camZ) * tweenRate
+			);
+			pWindow->cam1.camDist += (pWindow->cam1.camDistTarget - pWindow->cam1.camDist) * tweenRate;
+			
+
+		} else {
+			pWindow->cam1.setTranslation(0.0, 0.0, 0.0);
+			pWindow->cam2.setTranslation(0.0, 0.0, 0.0);
 		}
-		else {
-			pWindow->cam2.camX = 0;
-			pWindow->cam2.camY = 0;
-			pWindow->cam2.camZ = 0;
-		}
-
-		// debug statements
-		//cout << "rotX = " << rotX << ", rotY = " << rotY << ", rotZ = " << rotZ << endl;
 
         //Redraw and reset timer
 		pWindow->redraw();
@@ -128,7 +149,7 @@ double normalize(double x, double y, double z) {
 
 // split out drawing function so that you could draw multiple cameras,
 // then specifiy lookAt = true to follow a planet.
-void GlWindow::displayMe(Camera camNew, bool lookAt, bool showInfoOverlay, double camDist) {
+void GlWindow::displayMe(Camera camNew) {
 	
     //Initialize projection matrix
 	glMatrixMode(GL_PROJECTION);
@@ -140,71 +161,38 @@ void GlWindow::displayMe(Camera camNew, bool lookAt, bool showInfoOverlay, doubl
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	if (lookAt) {
-		// TODO fix this
-		gluLookAt(
-			cam2.camX, cam2.camY, cam2.camZ+camDist, 
-			cam2.camX, cam2.camY, cam2.camZ, 
-			0, 1, 0);
-		glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
-		//glRotatef(camNew.rotZ, 0.0, 0.0, 1.0);
-		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
-		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
-		
-		glTranslatef(-cam2.camX, -cam2.camY, -cam2.camZ);
-			
-			//glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
+	switch (camNew.cameraType) {
+		double normalizedVector; 
 
-
-		/*
-
-		// TODO fix this
-
-		// normalize velocity
-		// - noramilzed velocty
-		double normalizedVector = normalize(cam2.dx, cam2.dy, cam2.dz);
-		normalizedVector += 0.000000000000000000000001;
-		double x = cam2.camX - (cam2.dx/normalizedVector);
-		double y = cam2.camY - (cam2.dy/normalizedVector);
-		double z = cam2.camZ - (cam2.dz/normalizedVector);
-		
-		cout << normalizedVector << endl;
-
-		if (theUniverse.objList.size() > 0) {
+		case GlWindow::CHASE_CAM:
+			normalizedVector = normalize(camNew.dx, camNew.dy, camNew.dz);
+			normalizedVector += 0.000000000000000000000001;
 			gluLookAt(
-				x, y, z, 
-				cam2.camX, cam2.camY, cam2.camZ, 
-				0, 1, 0);
-		} else {
-			gluLookAt(
-				cam2.camX, cam2.camY, cam2.camZ+5.0, 
-				cam2.camX, cam2.camY, cam2.camZ, 
+				camNew.camX - (camNew.dx/normalizedVector) * camNew.camDistTarget,
+				camNew.camY - (camNew.dy/normalizedVector) * camNew.camDistTarget,
+				camNew.camZ - (camNew.dz/normalizedVector) * camNew.camDistTarget,
+				camNew.camX, camNew.camY, camNew.camZ,
 				0, 1, 0);
 
-			glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
-		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
-		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
-		glTranslatef(-cam2.camX, -cam2.camY, -cam2.camZ);
-		}
-		/*
-		glTranslatef(cam2.camX, cam2.camY, cam2.camZ);
-		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
-		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
-		glTranslatef(-cam2.camX, -cam2.camY, -cam2.camZ);
-		*/
-			
-			//glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
-		
-	} else {
-		//Move camera
-		glRotatef(camNew.rotZ, 0.0, 0.0, 1.0);
-		glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
-		glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
-		glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
+			break;
+
+		case GlWindow::PRIMARY_CAM:
+
+			gluLookAt(
+				camNew.camX, camNew.camY, camNew.camZ+camNew.camDist, 
+				camNew.camX, camNew.camY, camNew.camZ, 
+				0, 1, 0);
+			glTranslatef(camNew.camX, camNew.camY, camNew.camZ);
+			glRotatef(camNew.rotX, 1.0, 0.0, 0.0);
+			glRotatef(camNew.rotY, 0.0, 1.0, 0.0);
+			glTranslatef(-camNew.camX, -camNew.camY, -camNew.camZ);
+
+			break;
+
 	}
 
     //Draw grid
-	if(showGrid) {
+	if(camNew.showGrid) {
 		
 		glBegin(GL_LINES);
 		
@@ -303,7 +291,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt, bool showInfoOverlay, doubl
 		
 	}
 
-	if(showForceGrid) {
+	if(camNew.showForceGrid) {
 
 		double forceGridOffset = -(forceGridSize-1)*forceGridResolution/2.0;
 		
@@ -394,9 +382,9 @@ void GlWindow::displayMe(Camera camNew, bool lookAt, bool showInfoOverlay, doubl
 	
 
 	//Draw objects
-	theUniverse.draw(showTrails);
+	theUniverse.draw(camNew.showTrails);
 
-	if(showGrid)
+	if(camNew.showGrid)
 		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
 	else
 		glColor4f(0.3, 0.3, 0.4, 0.0);	//Make selection plane completely invisible
@@ -495,7 +483,7 @@ void GlWindow::displayMe(Camera camNew, bool lookAt, bool showInfoOverlay, doubl
 	}
 
 	//Display info on screen
-	if(showInfoOverlay) {
+	if(camNew.showInfoOverlay) {
 
 		//Prepare camera for text overlay
 		glMatrixMode(GL_PROJECTION);
@@ -567,17 +555,18 @@ void GlWindow::draw() {
 
 	// draw original scene on whole screen
 	glViewport(0,0,w(), h());
-    GlWindow::displayMe(cam1, true, showInfo, camDist1);
+	GlWindow::displayMe(cam1);
 
-	if(windowMode == 1) {
+	if(showChaseCamera) {
 
 		// draw second scene in the top right corner
-		glViewport(w()/2, h()/2, w()/2, h()/2);
+		glViewport(w()/4*3, h()/4*3, w()/4, h()/4);
 		// used so I could clear only the top right of the screen
 		glEnable(GL_SCISSOR_TEST);
-		glScissor(w()/2, h()/2, w()/2, h()/2);
+		glScissor(w()/4*3, h()/4*3, w()/4, h()/4);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		GlWindow::displayMe(cam2, true, false, camDist2);
+		// draw chase camera
+		GlWindow::displayMe(cam2);
 		glDisable(GL_SCISSOR_TEST);
 
 	}
@@ -648,9 +637,6 @@ int GlWindow::handle(int Fl_event) {
 			mouseY2 = mouseY;
 
 			mouseButton = 1;
-			if (mouseX > w()/2 && mouseY < h()/2 && !secWin && windowMode == 1) {
-				secWin = true;
-			}
 
 			updateFocus = true;
 			return 1;
@@ -675,7 +661,6 @@ int GlWindow::handle(int Fl_event) {
    
 
 	case FL_RELEASE:
-		secWin = false;
 		
 		if(addObj == 2 && Fl::event_button() == FL_RIGHT_MOUSE)
 			addObj = 3;
@@ -685,11 +670,11 @@ int GlWindow::handle(int Fl_event) {
 		return 1;
 
 	case FL_MOUSEWHEEL:
-		if (cursorX > w()/2 && cursorY < h()/2 && !secWin && windowMode == 1) {
-			camDist2target += 0.1*camDist2target*Fl::event_dy();
+		if (cursorX > w()/4*3 && cursorY < h()/4*3 && showChaseCamera) {
+			cam2.camDistTarget += 0.1*cam2.camDistTarget*Fl::event_dy();
 		}
 		else {
-			camDist1target += 0.1*camDist1target*Fl::event_dy();
+			cam1.camDistTarget += 0.1*cam1.camDistTarget*Fl::event_dy();
 		}
 		
 
@@ -712,27 +697,30 @@ int GlWindow::handle(int Fl_event) {
 		
 		case FL_F+3:
             //Toggle info overlay
-			showInfo = !showInfo;
+			cam1.showInfoOverlay = !cam1.showInfoOverlay;
 			return 1;
 
 		case FL_F+4:
             //Toggle grid
-			showGrid = !showGrid;
+			cam1.showGrid = !cam1.showGrid;
+			cam2.showGrid = !cam2.showGrid;
 			return 1;
 
 		case FL_F+5:
             //Toggle force grid
-			showForceGrid = !showForceGrid;
+			cam1.showForceGrid = !cam1.showForceGrid;
+			cam2.showForceGrid = !cam2.showForceGrid;
 			return 1;
 
 		case FL_F+6:
             //Toggle window mode
-			windowMode = (windowMode+1)%2;
+			showChaseCamera = !showChaseCamera;
 			return 1;
 
 		case FL_F+7:
 			//Toggle trail history
-			showTrails = !showTrails;
+			cam1.showTrails = !cam1.showTrails;
+			cam2.showTrails = !cam2.showTrails;
 			return 1;
 
 		case FL_Home:
@@ -949,16 +937,15 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
     mouseX = mouseY = 0.0;
 	mouseX2 = mouseY2 = 0.0;
 	cursorX = cursorY = 0.0;
-	secWin = false;
 	clickX = clickY = 0.0;
 	clickX2 = clickY2 = 0.0;
 	mouseButton = 1;
 	addObj = 0;
 
-	windowMode = 0;
-
-	camDist1 = camDist2 = 20.0;
-	camDist1target = camDist2target = 20.0;
+	cam1.camDist = 20.0;
+	cam2.camDist = 5.0;
+	cam1.camDistTarget = 20.0;
+	cam2.camDistTarget = 5.0;
 	updateFocus = false;
 	
 
@@ -968,10 +955,10 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	forceGridResolution = 0.25;
 
     //Initialize other variables
-	showInfo = true;
-	showGrid = true;
-	showForceGrid = false;
-	showTrails = true;
+	cam1.showInfoOverlay = true;
+	cam1.cameraType = GlWindow::PRIMARY_CAM;
+	cam2.cameraType = GlWindow::CHASE_CAM;
+	showChaseCamera = false;
 
     //Create initial timer
 	Fl::add_timeout(1.0/30.0, animate, this);
@@ -1029,8 +1016,10 @@ void GlWindow::hide() {
 }
 
 void GlWindow::resetCamera() {
-	camDist1 = camDist2 = 20.0;
-	camDist1target = camDist2target = 20.0;
+	cam1.camDist = 20.0;
+	cam2.camDist = 5.0;
+	cam1.camDistTarget = 20.0;
+	cam2.camDistTarget = 5.0;
 
 	cam1.rotX = 45.0;
 	cam1.rotY = -45.0;
