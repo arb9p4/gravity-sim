@@ -18,6 +18,9 @@
 
 using namespace std;
 
+int textureCount = 4;
+int i = 0;
+
 Universe::Universe() {
 	drawProxy = false;
 	createStars();
@@ -30,19 +33,19 @@ Universe::Universe() {
 void Universe::addObject() {
     objList.push_back(Body());
     objList.back().randVelocity();
-	objList.back().texture[0] = texture[0];
+	objList.back().texture[0] = texture[i++%textureCount];
 }
 
 void Universe::addObject(double x, double y, double z) {
     objList.push_back(Body(x, y, z));
-	objList.back().texture[0] = texture[0];
+	objList.back().texture[0] = texture[i++%textureCount];
 }
 
 void Universe::addObject(double x, double y, double z,
 			   double dx, double dy, double dz,
 			   double m) {
 	objList.push_back(Body(x,y,z,dx,dy,dz,m));
-	objList.back().texture[0] = texture[0];
+	objList.back().texture[0] = texture[i++%textureCount];
 }
 
 //Add object in auto-computed orbit around a body
@@ -217,7 +220,7 @@ void Universe::createStars() {
 
 void Universe::setProxy(double x, double y, double z, double m) {
 	proxy = Body(x,y,z,0,0,0,m);
-	proxy.texture[0] = texture[0];
+	proxy.texture[0] = texture[i%textureCount];
 	proxyVector.X = x;
 	proxyVector.Y = y;
 	proxyVector.Z = z;

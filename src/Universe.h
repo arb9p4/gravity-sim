@@ -71,7 +71,7 @@ void selectObject(double x, double y, double z);
 double computeForce(double x, double y, double z);
 
 //textures
-GLuint texture[2];
+GLuint texture[4];
 
 void nextObject();
 

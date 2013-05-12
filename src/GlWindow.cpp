@@ -147,8 +147,13 @@ void GlWindow::initialize(int W,int H) {
 
 	texture[0] = LoadTextureRAW( "earth.raw" );
 	theUniverse.texture[0] = texture[0];
-	texture[1] = LoadTextureRAW( "asteroid.raw" );
+	texture[1] = LoadTextureRAW( "jupiter.raw" );
 	theUniverse.texture[1] = texture[1];
+	texture[2] = LoadTextureRAW( "europa.raw" );
+	theUniverse.texture[2] = texture[2];
+	texture[3] = LoadTextureRAW( "venus.raw" );
+	theUniverse.texture[3] = texture[3];
+
 }
 
 double normalize(double x, double y, double z) {

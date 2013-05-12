@@ -223,7 +223,6 @@ void Body::drawShape() {
 	gluQuadricTexture(quad,1);
     gluSphere(quad,radius,20,16);
 	glDisable(GL_LIGHTING);
-	cout << texture << endl;
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 }
