@@ -26,11 +26,15 @@ std::list<Point> starList;
 Body proxy;
 Point proxyVector;
 bool drawProxy;
+bool drawProxyPath;
 
 Universe();
 
 //Add object at random location
 void addObject();
+
+//Adds a specific body
+void addObject(Body b);
 
 //Add object at specific location with no velocity
 void addObject(double x, double y, double z);
@@ -44,14 +48,19 @@ void addObject(double x, double y, double z,
 //Add object at position into orbit around specific body
 void addObject(double x, double y, double z, double m, Body* b);
 
+//Remove the current object
+void removeObject();
 
 void addTime(double timestep);
+
+//Reverses all velocities
+void reverse();
 
 double computeDistance(Body &a, Body &b);
 
 Body mergeBodies(Body a, Body b);
 
-void draw(bool showTrails);
+void draw(bool showTrails, double speedScale);
 
 void clear();
 
