@@ -132,8 +132,8 @@ void GlWindow::initialize(int W,int H) {
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Create light source
-	//GLfloat light_position[] = { 10.0, 20.0, 30.0, 0.0 };
-	//glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	GLfloat light_position[] = { 10.0, 20.0, 30.0, 0.0 };
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glDisable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
@@ -143,10 +143,12 @@ void GlWindow::initialize(int W,int H) {
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 	glEnable(GL_CULL_FACE);
-	
-    
-	texture[0] = LoadTextureRAW( "earth.raw" );
 
+
+	texture[0] = LoadTextureRAW( "earth.raw" );
+	theUniverse.setTexture(texture[0], 0);
+	texture[1] = LoadTextureRAW( "asteroid.raw" );
+	theUniverse.setTexture(texture[1], 1);
 }
 
 double normalize(double x, double y, double z) {
@@ -393,7 +395,7 @@ void GlWindow::displayMe(Camera camNew) {
 	
 
 	//Draw objects
-	theUniverse.draw(camNew.showTrails, texture[0]);
+	theUniverse.draw(camNew.showTrails);
 
 	if(camNew.showGrid)
 		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
@@ -1013,6 +1015,12 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 			   );
 
 	helpWindow->hide();
+
+	// set textures
+	texture[0] = LoadTextureRAW( "earth.raw" );
+	//texture[1] = LoadTextureRAW( "asteroid.raw" );
+	//theUniverse.setTexture(texture[0], 0);
+	//theUniverse.setTexture(texture[1], 1);
 }
 
 //Show help window
