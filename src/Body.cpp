@@ -16,6 +16,9 @@
 #include <cstdlib>
 #include <cmath>
 #include "Body.h"
+#include <iostream>
+
+using namespace std;
 
 #define INITIAL_TRAIL_LENGTH 100
 
@@ -212,6 +215,8 @@ void Body::drawShape(GLuint texture) {
 	gluQuadricTexture(quad,1);
     gluSphere(quad,radius,20,16);
 	glDisable(GL_LIGHTING);
+	cout << texture << endl;
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 }
 

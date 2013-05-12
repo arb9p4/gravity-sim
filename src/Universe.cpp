@@ -14,6 +14,9 @@
 #include <FL/glut.H>
 #include <cmath>
 #include "Universe.h"
+#include <iostream>
+
+using namespace std;
 
 Universe::Universe() {
 	drawProxy = false;
@@ -101,8 +104,6 @@ void Universe::addTime(double timestep) {
 		}
 	}
 
-	
-
     //Compute forces
     for(it1 = objList.begin(); it1 != objList.end(); ++it1) {
         for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
@@ -150,7 +151,7 @@ Body Universe::mergeBodies(Body a, Body b) {
 }
 
 //Draws all objects in the universe
-void Universe::draw(bool showTrails, GLuint texture) {
+void Universe::draw(bool showTrails) {
 
 	//Draw stars
 	glColor3f(1.0, 1.0, 1.0);
@@ -163,10 +164,11 @@ void Universe::draw(bool showTrails, GLuint texture) {
 
 	//Draw all objects
     std::list<Body>::iterator it;
+	int i = 0;
     for(it = objList.begin(); it != objList.end(); ++it) {
-        (*it).draw(showTrails, texture);
+        (*it).draw(showTrails, texture[i++%2]);
     }
-
+	i = 0;
 	//Draw proxy if necessary
 	if(drawProxy) {
 		glColor3f(1.0, 1.0, 1.0);
@@ -174,7 +176,7 @@ void Universe::draw(bool showTrails, GLuint texture) {
 		glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
 		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
 		glEnd();
-		proxy.draw(showTrails, texture);
+		proxy.draw(showTrails, texture[i++%2]);
 	}
 }
 
@@ -281,4 +283,8 @@ double Universe::computeForce(double x, double y, double z) {
     }
 
 	return f;
+}
+
+void Universe::setTexture(GLuint texture1, int i) {
+	texture[i] = texture1;
 }

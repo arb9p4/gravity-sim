@@ -51,7 +51,7 @@ double computeDistance(Body &a, Body &b);
 
 Body mergeBodies(Body a, Body b);
 
-void draw(bool showTrails, GLuint texture);
+void draw(bool showTrails);
 
 void clear();
 
@@ -69,6 +69,10 @@ void selectObject(double x, double y, double z);
 
 //Computes the total force at a point
 double computeForce(double x, double y, double z);
+
+//textures
+GLuint texture[2];
+void setTexture(GLuint texture, int i);
 
 };
 

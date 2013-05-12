@@ -12,6 +12,7 @@
 #ifndef GLWINDOW_H
 #define GLWINDOW_H
 
+
 #include <FL/glu.h>
 #include <FL/glut.H>
 #include <FL/Fl_Timer.H>
@@ -43,9 +44,6 @@ class GlWindow : public Fl_Gl_Window {
 	void displayMe(Camera);
 
 public:
-
-	GLuint texture[1];
-	GLuint GlWindow::LoadTextureRAW( const char * filename );
 
 	static const int PRIMARY_CAM;
 	static const int CHASE_CAM;
@@ -109,6 +107,10 @@ public:
 	void hide();
 
 	void resetCamera();
+
+	//textures
+	GLuint texture[1];
+	GLuint GlWindow::LoadTextureRAW( const char * filename );
 };
 
 #endif
