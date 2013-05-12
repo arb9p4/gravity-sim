@@ -18,7 +18,7 @@
 
 using namespace std;
 
-int textureCount = 4;
+int textureCount = 6;
 int i = 0;
 
 Universe::Universe() {
@@ -46,6 +46,7 @@ void Universe::addObject() {
 
 void Universe::addObject(Body b) {
 	objList.push_back(b);
+	objList.back().texture[0] = texture[i++%textureCount];
 }
 
 void Universe::addObject(double x, double y, double z) {

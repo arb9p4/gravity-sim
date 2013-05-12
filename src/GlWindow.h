@@ -114,7 +114,7 @@ public:
 	void resetCamera();
 
 	//textures
-	GLuint texture[1];
+	GLuint texture[5];
 	GLuint GlWindow::LoadTextureRAW( const char * filename );
 
 	void clear();

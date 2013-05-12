@@ -113,6 +113,7 @@ void drawSelector();
 
 // texture
 GLuint texture[1];
+float spinrate;
 
 };
 #endif

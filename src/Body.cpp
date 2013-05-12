@@ -105,6 +105,7 @@ void Body::initialize() {
 		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
 	trailIndex = 0;
 	trailLength = 0;
+	spinrate = 0.0f;
 }
 
 //Stops all movement
@@ -224,10 +225,13 @@ void Body::drawShape() {
 	glDisable(GL_LIGHTING);
 	*/
 
+	spinrate+=2.0f;
+
 	glEnable(GL_LIGHTING);
 	GLUquadric *quad = gluNewQuadric();
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glRotatef(90,1.0f,0.0f,0.0f);
+	glRotatef(spinrate, 0.0f,0.0f,1.0f);
 	gluQuadricTexture(quad,1);
     gluSphere(quad,radius,20,16);
 	glDisable(GL_LIGHTING);

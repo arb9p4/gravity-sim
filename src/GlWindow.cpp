@@ -153,6 +153,10 @@ void GlWindow::initialize(int W,int H) {
 	theUniverse.texture[2] = texture[2];
 	texture[3] = LoadTextureRAW( "venus.raw" );
 	theUniverse.texture[3] = texture[3];
+	texture[4] = LoadTextureRAW( "sunmap.raw" );
+	theUniverse.texture[4] = texture[4];
+	texture[5] = LoadTextureRAW( "red.raw" );
+	theUniverse.texture[5] = texture[5];
 
 }
 
@@ -734,6 +738,7 @@ int GlWindow::handle(int Fl_event) {
 			if(Fl::event_ctrl()) {
 				b.isStatic = true;
 				b.stop();
+				
 			}
 
 			theUniverse.addObject(b);
@@ -755,7 +760,6 @@ int GlWindow::handle(int Fl_event) {
 			cam1.camDistTarget += 0.1*cam1.camDistTarget*Fl::event_dy();
 		}
 		
-
 		return 1;
 
     //Handle key events
