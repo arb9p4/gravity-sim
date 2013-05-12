@@ -70,6 +70,9 @@ void selectObject(double x, double y, double z);
 //Computes the total force at a point
 double computeForce(double x, double y, double z);
 
+void nextObject();
+
+void previousObject();
 };
 
 #endif

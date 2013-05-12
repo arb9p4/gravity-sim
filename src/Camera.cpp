@@ -27,6 +27,7 @@ Camera::Camera()
 	showGrid = true;	//Display the grid
 	showForceGrid = false;	//Display the force grid
 	showTrails = true;	//True if trails should be drawn
+	showProxy = true;	//True if the proxy should be drawn
 
 	camDist = 5.0;
 
