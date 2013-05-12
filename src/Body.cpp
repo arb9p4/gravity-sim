@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#define INITIAL_TRAIL_LENGTH 100
+#define INITIAL_TRAIL_LENGTH 1000
 
 //Constructor to place a body at a random location
 Body::Body() {
@@ -37,18 +37,7 @@ Body::Body() {
 
     mass = 1.0;
 
-	//Compute radius
-    updateRadius();
-
-	selected = false;
-	isStatic = false;
-
-	trail.resize(INITIAL_TRAIL_LENGTH, Point());
-	trailAlpha.clear();
-	for(int i = 0; i < trail.size(); i++)
-		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
-	trailIndex = trail.size()-1;
-	trailLength = 0;
+	initialize();
 
 	//CreateSphere(70,0,0,0);
 
@@ -70,19 +59,7 @@ Body::Body(double x, double y, double z) {
 
     mass = 1.0;
 
-	//Compute radius
-    updateRadius();
-
-	selected = false;
-	isStatic = false;
-
-	trail.resize(INITIAL_TRAIL_LENGTH, Point());
-	trailAlpha.clear();
-	for(int i = 0; i < trail.size(); i++)
-		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
-	trailIndex = trail.size()-1;
-	trailLength = 0;
-
+	initialize();
     stop();
 
     //theAsteroid = Asteroid();
@@ -104,24 +81,30 @@ Body::Body(double x, double y, double z,
 
     mass = m;
 
-	//Compute radius
-    updateRadius();
-
-	selected = false;
-	isStatic = false;
-
-	trail.resize(INITIAL_TRAIL_LENGTH, Point());
-	trailAlpha.clear();
-	for(int i = 0; i < trail.size(); i++)
-		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
-	trailIndex = trail.size()-1;
-	trailLength = 0;
-
+	initialize();
     stop();
 
     dXpos = dx;
     dYpos = dy;
     dZpos = dz;
+}
+
+void Body::initialize() {
+	
+	//Compute radius
+    updateRadius();
+
+	selected = false;
+	isOrigin = false;
+	isStatic = false;
+	collidable = true;
+
+	trail.resize(INITIAL_TRAIL_LENGTH, Point());
+	trailAlpha.clear();
+	for(int i = 0; i < trail.size(); i++)
+		trailAlpha.push_back(1.0 - double(i)/double(trail.size()));
+	trailIndex = 0;
+	trailLength = 0;
 }
 
 //Stops all movement
@@ -173,6 +156,31 @@ double Body::computeForce(Body &b, double timestep) {
 	return force;
 }
 
+//Applies the current forces and updates the trail history
+void Body::applyForces(double timestep) {
+	//Update position
+    Xpos += dXpos * timestep;
+    Ypos += dYpos * timestep;
+    Zpos += dZpos * timestep;
+
+    //Update orientation
+    Xrot += dXrot * timestep;
+    Yrot += dYrot * timestep;
+    Zrot += dZrot * timestep;
+
+	//Update trail index
+	trailIndex--;
+	if(trailIndex < 0)
+		trailIndex = trail.size() - 1;
+
+	//Update the trail history
+	trail[trailIndex].X = Xpos;
+	trail[trailIndex].Y = Ypos;
+	trail[trailIndex].Z = Zpos;
+	if(trailLength < trail.size())
+		trailLength++;
+}
+
 //Draws the body
 void Body::draw(bool showTrails) {
 
@@ -183,7 +191,7 @@ void Body::draw(bool showTrails) {
 		drawHistory();
 	else {
 		//Clear the trail
-		trailIndex = trail.size()-1;
+		trailIndex = 0;
 		trailLength = 0;;
 	}
 
@@ -232,17 +240,8 @@ void Body::drawShape() {
 //Draws the history trail
 void Body::drawHistory() {
 
-    //Update the trail history
-    //Point thisPoint(Xpos, Ypos, Zpos);
-	//trail[trailIndex] = thisPoint;
-
-	trail[trailIndex].X = Xpos;
-	trail[trailIndex].Y = Ypos;
-	trail[trailIndex].Z = Zpos;
-	if(trailLength < trail.size())
-		trailLength++;
-
 	//Draw trail
+	glDepthMask(GL_FALSE);
 	glBegin(GL_LINE_STRIP);
 	for(int i = 0; i < trailLength; ++i) {
 		int index = (trailIndex+i)%trail.size();
@@ -250,11 +249,7 @@ void Body::drawHistory() {
         glVertex3f(trail[index].X, trail[index].Y, trail[index].Z);
 	}
 	glEnd();
-
-	//Update index
-	trailIndex--;
-	if(trailIndex < 0)
-		trailIndex = trail.size() - 1;
+	glDepthMask(GL_TRUE);
 
 	/*
 	bool addPoint = false;

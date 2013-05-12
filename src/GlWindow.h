@@ -80,6 +80,8 @@ public:
 	bool updateFocus;	//True if the focus object should be updated
 
 	double timestep;
+	double oldTimestep;
+	double speedScale;
 
 	int forceGridSize;
 	double forceGridResolution;
