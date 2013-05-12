@@ -65,10 +65,13 @@ public:
     double mouseX, mouseY;		//Current position
     double mouseX2, mouseY2;	//Last position
 	double cursorX, cursorY;	//Cursor position
+	double cursorX2, cursorY2;	//Last cursor position
 	double clickX, clickY;		//Clicked point
 	double clickX2, clickY2;	//Clicked point
 	int mouseButton;			//Which mouse button was last clicked
 	int addObj;					//0: not adding; 1: clicked; 2: released
+	double vectorHeight;		//Vertical vector component when adding objects
+	double gridHeight;			//Height of the grid for adding objects
 
 	//Camera parameters
 	Camera cam1;
@@ -111,6 +114,8 @@ public:
 	//textures
 	GLuint texture[1];
 	GLuint GlWindow::LoadTextureRAW( const char * filename );
+
+	void clear();
 };
 
 #endif

@@ -208,18 +208,15 @@ void GlWindow::displayMe(Camera camNew) {
 	if(camNew.showGrid) {
 		
 		glBegin(GL_LINES);
-		
-		
 		glColor3f(0.3, 0.3, 0.4);
 		for(GLfloat i = -100.0; i <= 100.0; ++i) {
-			glVertex3f(i, 0.0, -100.0);
-			glVertex3f(i, 0.0, 100.0);
+			glVertex3f(i, gridHeight, -100.0);
+			glVertex3f(i, gridHeight, 100.0);
 		}
 		for(GLfloat i = -100.0; i <= 100.0; ++i) {
-			glVertex3f(-100.0, 0.0, i);
-			glVertex3f(100.0, 0.0, i);
+			glVertex3f(-100.0, gridHeight, i);
+			glVertex3f(100.0, gridHeight, i);
 		}
-		
 		glEnd();
 		
 		//Draw axes
@@ -403,10 +400,10 @@ void GlWindow::displayMe(Camera camNew) {
 		glColor4f(0.3, 0.3, 0.4, 0.0);	//Make selection plane completely invisible
 
 	glBegin(GL_QUADS);
-		glVertex3f(-100, 0, -100);
-		glVertex3f(-100, 0, 100);
-		glVertex3f(100, 0, 100);
-		glVertex3f(100, 0, -100);
+		glVertex3f(-100, gridHeight, -100);
+		glVertex3f(-100, gridHeight, 100);
+		glVertex3f(100, gridHeight, 100);
+		glVertex3f(100, gridHeight, -100);
 	glEnd();
 
 	if(updateFocus) {
@@ -425,7 +422,13 @@ void GlWindow::displayMe(Camera camNew) {
 		updateFocus = false;
 	}
 
-	if(addObj > 0) {
+	GLdouble posX, posY, posZ;              // Hold The Final Values
+	GLdouble posX2, posY2, posZ2;
+
+	posX = posY = posZ = 0.0;
+	posX2 = posY2 = posZ2 = 0.0;
+
+	if(addObj > 0 && camNew.showProxy) {
 
 		GLint viewport[4];                  // Where The Viewport Values Will Be Stored
 		glGetIntegerv(GL_VIEWPORT, viewport);           // Retrieves The Viewport Values (X, Y, Width, Height)
@@ -450,16 +453,10 @@ void GlWindow::displayMe(Camera camNew) {
 		winY2 = viewport[3] - clickY2;
 		glReadPixels(winX2, winY2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ2);
 
-		GLdouble posX, posY, posZ;              // Hold The Final Values
-		GLdouble posX2, posY2, posZ2;
+		
 
 		gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
 		gluUnProject( winX2, winY2, winZ2, modelview, projection, viewport, &posX2, &posY2, &posZ2);
-
-		double speedScale = 0.1;
-
-		
-
 
 
 		if(addObj == 1) {
@@ -474,24 +471,17 @@ void GlWindow::displayMe(Camera camNew) {
 				theUniverse.proxy.mass *= 1.1;
 				theUniverse.proxy.updateRadius();
 			}
-			theUniverse.setProxyVector(posX2,posY2,posZ2);
-		}
-		else if(addObj == 3) {
 
-			double posX = theUniverse.proxy.Xpos;
-			double posY = theUniverse.proxy.Ypos;
-			double posZ = theUniverse.proxy.Zpos;
+			double dx = posX2 - posX;
+			double dy = posY2+vectorHeight - posY;
+			double dz = posZ2 - posZ;
 
-			double dx = (posX2 - posX)*speedScale;
-			double dy = (posY2 - posY)*speedScale;
-			double dz = (posZ2 - posZ)*speedScale;
-
-			double m = theUniverse.proxy.mass;
-
-			theUniverse.addObject(posX, posY, posZ, dx, 0, dz, m);
-			theUniverse.clearProxy();
-
-			addObj = 0;
+			double u = normalize(dx, dy, dz);
+			
+			if(u > 0.01) {
+				double l = sqrt(dx*dx + dz*dz);
+				theUniverse.setProxyVector(posX+l*dx/u, posY+l*dy/u, posZ+l*dz/u);
+			}
 		}
 	}
 
@@ -557,6 +547,14 @@ void GlWindow::displayMe(Camera camNew) {
 		currentLine += lineHeight;
 		sprintf(buffer, "addObj: %d", addObj);
 		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "PosX PosY PosZ: %.1f %.1f %.1f", posX, posY, posZ);
+		printString(2, currentLine, buffer);
+
+		currentLine += lineHeight;
+		sprintf(buffer, "PosX2 PosY2 PosZ2: %.1f %.1f %.1f", posX2, posY2, posZ2);
+		printString(2, currentLine, buffer);
 	}
 }
 
@@ -568,7 +566,10 @@ void GlWindow::draw() {
 
 	// draw original scene on whole screen
 	glViewport(0,0,w(), h());
-	GlWindow::displayMe(cam1);
+	if(cam1.cameraType == GlWindow::PRIMARY_CAM)
+		GlWindow::displayMe(cam1);
+	else
+		GlWindow::displayMe(cam2);
 
 	if(showChaseCamera) {
 
@@ -609,32 +610,58 @@ int GlWindow::handle(int Fl_event) {
 
 	//Handle mouse events
 	case FL_FOCUS:
+		cout << "Focus" << endl;
 	case FL_UNFOCUS:
+		cout << "Unfocus" << endl;
 		return 1;
 
 	case FL_ENTER:
+		cout << "Enter" << endl;
         Fl::focus(this);
         return 1;
 
 	case FL_MOVE:
+	case FL_DRAG:
+		cout << "Move" << endl;
+		cursorX2 = cursorX;
+		cursorY2 = cursorY;
 		cursorX = Fl::event_x();
 		cursorY = Fl::event_y();
-		return 1;
+		//return 1;
 
-	case FL_DRAG:
+		if(Fl::event_button2() && addObj == 0) {
+			//Move grid height
+			gridHeight += (cursorY2 - cursorY) * 0.1;
+		}
 		
-		if(addObj > 0) {
+		if(Fl::event_button1() || Fl::event_button3()) {
+			
+			cout << "Drag " << addObj << endl;
+			
+			if(addObj > 0) {
 
-			//Adding object
-			clickX2 = Fl::event_x();
-			clickY2 = Fl::event_y();
-		} 
-		else {
+				//Adding object
 
-			//Rotating camera
-			mouseX = Fl::event_x();
-			mouseY = Fl::event_y();
+				if(Fl::event_button1()) {
+					//Add vertical vector component
+					vectorHeight += (cursorY2 - cursorY) * 0.05;
 
+				}
+				else {
+					//Move in plane
+					
+					clickX2 = Fl::event_x();
+					clickY2 = Fl::event_y();
+				}
+
+			} 
+			else {
+
+				//Rotating camera
+				mouseX = Fl::event_x();
+				mouseY = Fl::event_y();
+
+			}
 		}
 
         return 1;
@@ -643,11 +670,12 @@ int GlWindow::handle(int Fl_event) {
 
 		switch(Fl::event_button()) {
 		case FL_LEFT_MOUSE:
-
+			cout << "Push Left Mouse" << endl;
 			mouseX = Fl::event_x();
 			mouseY = Fl::event_y();
 			mouseX2 = mouseX;
 			mouseY2 = mouseY;
+			vectorHeight = 0.0;
 
 			mouseButton = 1;
 
@@ -655,17 +683,24 @@ int GlWindow::handle(int Fl_event) {
 			return 1;
 		
 		case FL_MIDDLE_MOUSE:
+			cout << "Push Middle Mouse" << endl;
+
 			
+
 			return 1;
 
 		case FL_RIGHT_MOUSE:
-			
+			cout << "Push Right Mouse" << endl;
 			
 			clickX = Fl::event_x();
 			clickY = Fl::event_y();
 			clickX2 = clickX;
 			clickY2 = clickY;
+
+			vectorHeight = 0.0;
 			mouseButton = 2;
+
+			
 			addObj = 1;
 			
 
@@ -674,11 +709,27 @@ int GlWindow::handle(int Fl_event) {
    
 
 	case FL_RELEASE:
-		
-		if(addObj == 2 && Fl::event_button() == FL_RIGHT_MOUSE)
-			addObj = 3;
-		else if(addObj == 2 && Fl::event_button() != FL_RIGHT_MOUSE)
-			return 0;
+		cout << "Release" << Fl::event_button() << endl;
+		//if(addObj == 2 && Fl::event_button() == FL_RIGHT_MOUSE)
+		if(addObj == 2) {
+
+			double dx = theUniverse.proxyVector.X - theUniverse.proxy.Xpos;
+			double dy = theUniverse.proxyVector.Y - theUniverse.proxy.Ypos;
+			double dz = theUniverse.proxyVector.Z - theUniverse.proxy.Zpos;
+
+			double m = theUniverse.proxy.mass;
+
+			double speed = 0.1;
+
+			theUniverse.addObject(theUniverse.proxy.Xpos, theUniverse.proxy.Ypos, theUniverse.proxy.Zpos,
+				                  dx*speed, dy*speed, dz*speed, m);
+			theUniverse.clearProxy();
+
+			mouseX = mouseX2 = cursorX;
+			mouseY = mouseY2 = cursorY;
+
+			addObj = 0;
+		}
 
 		return 1;
 
@@ -740,12 +791,33 @@ int GlWindow::handle(int Fl_event) {
 			//Set the origin as the focus
 			theUniverse.selectObject(0,0,0);
 			return 1;
+
+		case FL_End:
+			//Reset the grid height
+			gridHeight = 0.0;
+			return 1;
 		
+		case FL_Tab:
+			if(cam1.cameraType == GlWindow::CHASE_CAM) {
+				cam1.cameraType = GlWindow::PRIMARY_CAM;
+			}
+			else {
+				cam1.cameraType = GlWindow::CHASE_CAM;
+			}
+
 		case FL_Left:
-			forceGridSize = (int)ceil(forceGridSize * 0.8);
+			theUniverse.previousObject();
 			return 1;
 
 		case FL_Right:
+			theUniverse.nextObject();
+			return 1;
+
+		case FL_Page_Down:
+			forceGridSize = (int)ceil(forceGridSize * 0.8);
+			return 1;
+
+		case FL_Page_Up:
 			forceGridSize = (int)ceil(forceGridSize * 1.25);
 			return 1;
 
@@ -950,10 +1022,13 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
     mouseX = mouseY = 0.0;
 	mouseX2 = mouseY2 = 0.0;
 	cursorX = cursorY = 0.0;
+	cursorX2 = cursorY2 = 0.0;
 	clickX = clickY = 0.0;
 	clickX2 = clickY2 = 0.0;
 	mouseButton = 1;
 	addObj = 0;
+	vectorHeight = 0.0;
+	gridHeight = 0.0;
 
 	cam1.camDist = 20.0;
 	cam2.camDist = 5.0;
@@ -971,6 +1046,7 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	cam1.showInfoOverlay = true;
 	cam1.cameraType = GlWindow::PRIMARY_CAM;
 	cam2.cameraType = GlWindow::CHASE_CAM;
+	cam2.showProxy = false;
 	showChaseCamera = false;
 
     //Create initial timer
@@ -1035,8 +1111,8 @@ void GlWindow::hide() {
 }
 
 void GlWindow::resetCamera() {
-	cam1.camDist = 20.0;
-	cam2.camDist = 5.0;
+	//cam1.camDist = 20.0;
+	//cam2.camDist = 5.0;
 	cam1.camDistTarget = 20.0;
 	cam2.camDistTarget = 5.0;
 
@@ -1045,6 +1121,13 @@ void GlWindow::resetCamera() {
 
 	cam2.rotX = 45.0;
 	cam2.rotY = -45.0;
+}
+
+void GlWindow::clear() {
+	theUniverse.clear();
+	resetCamera();
+	gridHeight = 0.0;
+	timestep = (1.0/30.0)*10;
 }
 
 GLuint GlWindow::LoadTextureRAW( const char * filename ) {

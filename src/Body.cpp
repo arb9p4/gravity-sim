@@ -208,6 +208,14 @@ void Body::draw(bool showTrails, GLuint texture) {
 
 void Body::drawShape(GLuint texture) {
 
+	/*
+	glEnable(GL_LIGHTING);
+    //glColor3f(1.0, 0.0, 1.0);
+	glRotatef(90.0, 1.0, 0.0, 0.0);
+    glutSolidSphere(radius, 20, 16);
+	glDisable(GL_LIGHTING);
+	*/
+
 	glEnable(GL_LIGHTING);
 	GLUquadric *quad = gluNewQuadric();
 	glBindTexture(GL_TEXTURE_2D, texture);

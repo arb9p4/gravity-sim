@@ -35,8 +35,7 @@ class GravitySimApp {
 	//Clear all objects in the scene
 	static void clearScene(Fl_Widget *w, void *data) {
         GravitySimApp *o = (GravitySimApp*)data;
-        o->view->theUniverse.clear();
-		o->view->resetCamera();
+        o->view->clear();
     }
 
 	/*** Menu callback functions ***/

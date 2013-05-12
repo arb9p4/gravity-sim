@@ -171,9 +171,14 @@ void Universe::draw(bool showTrails) {
 	i = 0;
 	//Draw proxy if necessary
 	if(drawProxy) {
-		glColor3f(1.0, 1.0, 1.0);
+		
+		//Draw vector
 		glBegin(GL_LINES);
+		glColor3f(1.0, 1.0, 1.0);
 		glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
+		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
+		glColor3f(1.0, 1.0, 0.0);
+		glVertex3f(proxyVector.X, proxy.Ypos, proxyVector.Z);
 		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
 		glEnd();
 		proxy.draw(showTrails, texture[i++%2]);
@@ -287,4 +292,16 @@ double Universe::computeForce(double x, double y, double z) {
 
 void Universe::setTexture(GLuint texture1, int i) {
 	texture[i] = texture1;
+}
+
+void Universe::nextObject() {
+	Body b = objList.front();
+	objList.pop_front();
+	objList.push_back(b);
+}
+
+void Universe::previousObject() {
+	Body b = objList.back();
+	objList.pop_back();
+	objList.push_front(b);
 }
