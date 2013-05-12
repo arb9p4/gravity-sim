@@ -23,17 +23,29 @@ int i = 0;
 
 Universe::Universe() {
 	drawProxy = false;
+	drawProxyPath = true;
 	createStars();
+	clear();
+}
+
+void Universe::clear() {
+    objList.clear();
 
 	//Add home object
 	addObject(0,0,0,0,0,0,0);
+	objList.front().isOrigin = true;
 	objList.front().isStatic = true;
+	objList.front().collidable = false;
 }
 
 void Universe::addObject() {
     objList.push_back(Body());
     objList.back().randVelocity();
 	objList.back().texture[0] = texture[i++%textureCount];
+}
+
+void Universe::addObject(Body b) {
+	objList.push_back(b);
 }
 
 void Universe::addObject(double x, double y, double z) {
@@ -57,6 +69,12 @@ void Universe::addObject(double x, double y, double z,
 	//objList.push_back(Body(x,y,z,dx,dy,dz,m));
 }
 
+void Universe::removeObject() {
+	if(!objList.front().isOrigin) {
+		objList.pop_front();
+	}
+}
+
 void Universe::addTime(double timestep) {
 
     std::list<Body>::iterator it1, it2;
@@ -68,40 +86,50 @@ void Universe::addTime(double timestep) {
 		for(it1 = objList.begin(); it1 != objList.end(); ++it1) {
 			
 			//Ignore static objects
-			if((*it1).isStatic) continue;
+			if(!(*it1).collidable) continue;
 			
 			for(it2 = objList.begin(); it2 != objList.end(); ++it2) {
 				
 				//Ignore static objects
-				if((*it2).isStatic) continue;
+				if(!(*it2).collidable) continue;
 				
 				if(it1 != it2) {
 					if(computeDistance(*it1,*it2) < (*it1).radius + (*it2).radius) {
 						
-						//Update variables
-						double m = (*it1).mass + (*it2).mass;
-						(*it1).Xpos = ((*it1).mass*(*it1).Xpos + (*it2).mass*(*it2).Xpos)/m;
-						(*it1).Ypos = ((*it1).mass*(*it1).Ypos + (*it2).mass*(*it2).Ypos)/m;
-						(*it1).Zpos = ((*it1).mass*(*it1).Zpos + (*it2).mass*(*it2).Zpos)/m;
-						(*it1).dXpos = ((*it1).mass*(*it1).dXpos + (*it2).mass*(*it2).dXpos)/m;
-						(*it1).dYpos = ((*it1).mass*(*it1).dYpos + (*it2).mass*(*it2).dYpos)/m;
-						(*it1).dZpos = ((*it1).mass*(*it1).dZpos + (*it2).mass*(*it2).dZpos)/m;
-						(*it1).mass = m;
-						(*it1).updateRadius();
-
-						//Clear the trail
-						(*it1).trailIndex = (*it1).trail.size()-1;
-						(*it1).trailLength = 0;
-
-						//Erase the last object
-						
-						//(*it2).mass = 0;
-						//(*it2).updateRadius();
-						//(*it2).isStatic = true;
-						
-						objList.erase(it2);
-						
 						noMerges = false;
+
+						if((*it1).isStatic) {
+							objList.erase(it2);
+						}
+						else if((*it2).isStatic) {
+							objList.erase(it1);
+						}
+						else {
+
+							//Update variables
+							double m = (*it1).mass + (*it2).mass;
+							(*it1).Xpos = ((*it1).mass*(*it1).Xpos + (*it2).mass*(*it2).Xpos)/m;
+							(*it1).Ypos = ((*it1).mass*(*it1).Ypos + (*it2).mass*(*it2).Ypos)/m;
+							(*it1).Zpos = ((*it1).mass*(*it1).Zpos + (*it2).mass*(*it2).Zpos)/m;
+							(*it1).dXpos = ((*it1).mass*(*it1).dXpos + (*it2).mass*(*it2).dXpos)/m;
+							(*it1).dYpos = ((*it1).mass*(*it1).dYpos + (*it2).mass*(*it2).dYpos)/m;
+							(*it1).dZpos = ((*it1).mass*(*it1).dZpos + (*it2).mass*(*it2).dZpos)/m;
+							(*it1).mass = m;
+							(*it1).updateRadius();
+
+							//Clear the trail
+							(*it1).trailIndex = 0;
+							(*it1).trailLength = 0;
+
+							//Erase the last object
+						
+							//(*it2).mass = 0;
+							//(*it2).updateRadius();
+							//(*it2).isStatic = true;
+						
+							objList.erase(it2);
+						}			
+						
 						break;
 					}
 				}
@@ -121,16 +149,16 @@ void Universe::addTime(double timestep) {
 
     std::list<Body>::iterator it;
     for(it = objList.begin(); it != objList.end(); ++it) {
+		(*it).applyForces(timestep);
+    }
+}
 
-        //Update position
-        (*it).Xpos += (*it).dXpos * timestep;
-        (*it).Ypos += (*it).dYpos * timestep;
-        (*it).Zpos += (*it).dZpos * timestep;
-
-        //Update orientation
-        (*it).Xrot += (*it).dXrot * timestep;
-        (*it).Yrot += (*it).dYrot * timestep;
-        (*it).Zrot += (*it).dZrot * timestep;
+void Universe::reverse() {
+	std::list<Body>::iterator it;
+    for(it = objList.begin(); it != objList.end(); ++it) {
+        (*it).dXpos *= -1;
+		(*it).dYpos *= -1;
+		(*it).dZpos *= -1;
     }
 }
 
@@ -157,7 +185,7 @@ Body Universe::mergeBodies(Body a, Body b) {
 }
 
 //Draws all objects in the universe
-void Universe::draw(bool showTrails) {
+void Universe::draw(bool showTrails, double speedScale) {
 
 	//Draw stars
 	glColor3f(1.0, 1.0, 1.0);
@@ -170,33 +198,57 @@ void Universe::draw(bool showTrails) {
 
 	//Draw all objects
     std::list<Body>::iterator it;
-	int i = 0;
     for(it = objList.begin(); it != objList.end(); ++it) {
         (*it).draw(showTrails);
     }
-	i = 0;
+
 	//Draw proxy if necessary
 	if(drawProxy) {
+
+		//Draw future path
+		if(drawProxyPath) {
+
+			glDepthMask(GL_FALSE);
+
+			glBegin(GL_LINE_STRIP);
+			glColor3f(1.0, 0.7, 0.1);
+			glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
+			Body p = proxy;
+			p.dXpos = (proxyVector.X - p.Xpos)*speedScale;
+			p.dYpos = (proxyVector.Y - p.Ypos)*speedScale;
+			p.dZpos = (proxyVector.Z - p.Zpos)*speedScale;
+			std::list<Body>::iterator it;
+			for(int i = 0; i < 100; i++) {
+				for(it = objList.begin(); it != objList.end(); ++it) {
+					p.computeForce((*it), 1);
+				}
+
+				p.Xpos += p.dXpos;
+				p.Ypos += p.dYpos;
+				p.Zpos += p.dZpos;
+
+				glVertex3f(p.Xpos, p.Ypos, p.Zpos);
+			}
+			glEnd();
 		
-		//Draw vector
-		glBegin(GL_LINES);
-		glColor3f(1.0, 1.0, 1.0);
-		glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
-		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
-		glColor3f(1.0, 1.0, 0.0);
-		glVertex3f(proxyVector.X, proxy.Ypos, proxyVector.Z);
-		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
-		glEnd();
+
+			//Draw vector
+			glBegin(GL_LINES);
+			glColor3f(1.0, 1.0, 1.0);
+			glVertex3f(proxy.Xpos, proxy.Ypos, proxy.Zpos);
+			glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
+			glColor3f(1.0, 1.0, 0.0);
+			glVertex3f(proxyVector.X, proxy.Ypos, proxyVector.Z);
+			glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
+			glEnd();
+		
+			glDepthMask(GL_TRUE);
+
+		}
+		
 		proxy.draw(showTrails);
+	
 	}
-}
-
-void Universe::clear() {
-    objList.clear();
-
-	//Add home object
-	addObject(0,0,0,0,0,0,0);
-	objList.front().isStatic = true;
 }
 
 void Universe::createStars() {

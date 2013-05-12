@@ -231,29 +231,29 @@ void GlWindow::displayMe(Camera camNew) {
 		glBegin(GL_QUADS);
 		glColor3f(0.5, 0.5, 0.5);
 		glVertex3f(-axisWidth, -axisWidth, -axisWidth);
-		glVertex3f(-axisWidth,  axisWidth, -axisWidth);
-		glVertex3f(-axisWidth,  axisWidth,  axisWidth);
 		glVertex3f(-axisWidth, -axisWidth,  axisWidth);
+		glVertex3f(-axisWidth,  axisWidth,  axisWidth);
+		glVertex3f(-axisWidth,  axisWidth, -axisWidth);
 		glVertex3f(-axisWidth, -axisWidth, -axisWidth);
 		glVertex3f( axisWidth, -axisWidth, -axisWidth);
 		glVertex3f( axisWidth, -axisWidth,  axisWidth);
 		glVertex3f(-axisWidth, -axisWidth,  axisWidth);
-		glVertex3f(-axisWidth, -axisWidth, -axisWidth);
-		glVertex3f( axisWidth, -axisWidth, -axisWidth);
-		glVertex3f( axisWidth,  axisWidth, -axisWidth);
 		glVertex3f(-axisWidth,  axisWidth, -axisWidth);
+		glVertex3f( axisWidth,  axisWidth, -axisWidth);
+		glVertex3f( axisWidth, -axisWidth, -axisWidth);
+		glVertex3f(-axisWidth, -axisWidth, -axisWidth);
 		glEnd();
 
 		glColor3f(0.6, 0.3, 0.3);
 		glBegin(GL_QUAD_STRIP);
 		glVertex3f(axisWidth , -axisWidth, -axisWidth);
 		glVertex3f(axisLength, -axisWidth, -axisWidth);
-		glVertex3f(axisWidth ,  axisWidth, -axisWidth);
-		glVertex3f(axisLength,  axisWidth, -axisWidth);
-		glVertex3f(axisWidth ,  axisWidth,  axisWidth);
-		glVertex3f(axisLength,  axisWidth,  axisWidth);
 		glVertex3f(axisWidth , -axisWidth,  axisWidth);
 		glVertex3f(axisLength, -axisWidth,  axisWidth);
+		glVertex3f(axisWidth ,  axisWidth,  axisWidth);
+		glVertex3f(axisLength,  axisWidth,  axisWidth);	
+		glVertex3f(axisWidth ,  axisWidth, -axisWidth);
+		glVertex3f(axisLength,  axisWidth, -axisWidth);	
 		glVertex3f(axisWidth , -axisWidth, -axisWidth);
 		glVertex3f(axisLength, -axisWidth, -axisWidth);
 		glEnd();
@@ -288,12 +288,12 @@ void GlWindow::displayMe(Camera camNew) {
 		glBegin(GL_QUAD_STRIP);
 		glVertex3f(-axisWidth, -axisWidth, axisWidth );
 		glVertex3f(-axisWidth, -axisWidth, axisLength);
-		glVertex3f( axisWidth, -axisWidth, axisWidth );
-		glVertex3f( axisWidth, -axisWidth, axisLength);
-		glVertex3f( axisWidth,  axisWidth, axisWidth );
-		glVertex3f( axisWidth,  axisWidth, axisLength);
 		glVertex3f(-axisWidth,  axisWidth, axisWidth );
 		glVertex3f(-axisWidth,  axisWidth, axisLength);
+		glVertex3f( axisWidth,  axisWidth, axisWidth );
+		glVertex3f( axisWidth,  axisWidth, axisLength);	
+		glVertex3f( axisWidth, -axisWidth, axisWidth );
+		glVertex3f( axisWidth, -axisWidth, axisLength);	
 		glVertex3f(-axisWidth, -axisWidth, axisWidth );
 		glVertex3f(-axisWidth, -axisWidth, axisLength);
 		glEnd();
@@ -395,9 +395,9 @@ void GlWindow::displayMe(Camera camNew) {
 	
 
 	
-
 	//Draw objects
-	theUniverse.draw(camNew.showTrails);
+	theUniverse.draw(camNew.showTrails, speedScale);
+	
 
 	if(camNew.showGrid)
 		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
@@ -457,9 +457,7 @@ void GlWindow::displayMe(Camera camNew) {
 		winX2 = clickX2;
 		winY2 = viewport[3] - clickY2;
 		glReadPixels(winX2, winY2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ2);
-
 		
-
 		gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
 		gluUnProject( winX2, winY2, winZ2, modelview, projection, viewport, &posX2, &posY2, &posZ2);
 
@@ -477,16 +475,22 @@ void GlWindow::displayMe(Camera camNew) {
 				theUniverse.proxy.updateRadius();
 			}
 
+			//cout << winX2 << " " << winY2 << " " << winZ2 << endl;
+			//cout << posX2 << " " << posY2 << " " << posZ2 << endl;
+
 			double dx = posX2 - posX;
 			double dy = posY2+vectorHeight - posY;
 			double dz = posZ2 - posZ;
 
+			theUniverse.setProxyVector(posX+dx, posY+dy, posZ+dz);
+
+			/*
 			double u = normalize(dx, dy, dz);
-			
 			if(u > 0.01) {
 				double l = sqrt(dx*dx + dz*dz);
 				theUniverse.setProxyVector(posX+l*dx/u, posY+l*dy/u, posZ+l*dz/u);
 			}
+			*/
 		}
 	}
 
@@ -615,19 +619,19 @@ int GlWindow::handle(int Fl_event) {
 
 	//Handle mouse events
 	case FL_FOCUS:
-		cout << "Focus" << endl;
+		//cout << "Focus" << endl;
 	case FL_UNFOCUS:
-		cout << "Unfocus" << endl;
+		//cout << "Unfocus" << endl;
 		return 1;
 
 	case FL_ENTER:
-		cout << "Enter" << endl;
+		//cout << "Enter" << endl;
         Fl::focus(this);
         return 1;
 
 	case FL_MOVE:
 	case FL_DRAG:
-		cout << "Move" << endl;
+		//cout << "Move" << endl;
 		cursorX2 = cursorX;
 		cursorY2 = cursorY;
 		cursorX = Fl::event_x();
@@ -641,7 +645,7 @@ int GlWindow::handle(int Fl_event) {
 		
 		if(Fl::event_button1() || Fl::event_button3()) {
 			
-			cout << "Drag " << addObj << endl;
+			//cout << "Drag " << addObj << endl;
 			
 			if(addObj > 0) {
 
@@ -675,7 +679,7 @@ int GlWindow::handle(int Fl_event) {
 
 		switch(Fl::event_button()) {
 		case FL_LEFT_MOUSE:
-			cout << "Push Left Mouse" << endl;
+			//cout << "Push Left Mouse" << endl;
 			mouseX = Fl::event_x();
 			mouseY = Fl::event_y();
 			mouseX2 = mouseX;
@@ -688,14 +692,14 @@ int GlWindow::handle(int Fl_event) {
 			return 1;
 		
 		case FL_MIDDLE_MOUSE:
-			cout << "Push Middle Mouse" << endl;
+			//cout << "Push Middle Mouse" << endl;
 
 			
 
 			return 1;
 
 		case FL_RIGHT_MOUSE:
-			cout << "Push Right Mouse" << endl;
+			//cout << "Push Right Mouse" << endl;
 			
 			clickX = Fl::event_x();
 			clickY = Fl::event_y();
@@ -714,9 +718,9 @@ int GlWindow::handle(int Fl_event) {
    
 
 	case FL_RELEASE:
-		cout << "Release" << Fl::event_button() << endl;
-		//if(addObj == 2 && Fl::event_button() == FL_RIGHT_MOUSE)
-		if(addObj == 2) {
+		//cout << "Release" << Fl::event_button() << endl;
+		if(addObj == 2 && Fl::event_button() == FL_RIGHT_MOUSE) {
+		//if(addObj == 2) {
 
 			double dx = theUniverse.proxyVector.X - theUniverse.proxy.Xpos;
 			double dy = theUniverse.proxyVector.Y - theUniverse.proxy.Ypos;
@@ -724,10 +728,15 @@ int GlWindow::handle(int Fl_event) {
 
 			double m = theUniverse.proxy.mass;
 
-			double speed = 0.1;
+			Body b(theUniverse.proxy.Xpos, theUniverse.proxy.Ypos, theUniverse.proxy.Zpos,
+				                  dx*speedScale, dy*speedScale, dz*speedScale, m);
 
-			theUniverse.addObject(theUniverse.proxy.Xpos, theUniverse.proxy.Ypos, theUniverse.proxy.Zpos,
-				                  dx*speed, dy*speed, dz*speed, m);
+			if(Fl::event_ctrl()) {
+				b.isStatic = true;
+				b.stop();
+			}
+
+			theUniverse.addObject(b);
 			theUniverse.clearProxy();
 
 			mouseX = mouseX2 = cursorX;
@@ -752,6 +761,7 @@ int GlWindow::handle(int Fl_event) {
     //Handle key events
 	case FL_KEYDOWN:
 		shiftKey = (Fl::event_shift() > 0) ? 1 : 0;
+		theUniverse.drawProxyPath = (Fl::event_ctrl() > 0) ? false : true;
 
 		switch(Fl::event_key()) {
 		case FL_F+1:
@@ -832,6 +842,37 @@ int GlWindow::handle(int Fl_event) {
 
 		case FL_Up:
 			forceGridResolution *= 1.25;
+			return 1;
+
+		case FL_Pause:
+			//Pause the simulation
+			if(timestep > 0) {
+				oldTimestep = timestep;
+				timestep = 0.0;
+			}
+			else {
+				timestep = oldTimestep;
+			}
+			return 1;
+
+		case FL_Insert:
+			//Reverse the simulation
+			theUniverse.reverse();
+			return 1;
+
+		case FL_Escape:
+			//Cancel adding object
+			if(addObj > 0) {
+				theUniverse.clearProxy();
+				mouseX = mouseX2 = cursorX;
+				mouseY = mouseY2 = cursorY;
+				addObj = 0;
+			}
+			return 1;
+
+		case FL_Delete:
+			//Delete current object
+			theUniverse.removeObject();
 			return 1;
 
         case ' ':
@@ -916,9 +957,11 @@ int GlWindow::handle(int Fl_event) {
 			keyB = 1;
 			return 1;
 		}
+		break;
 
 	case FL_KEYUP:
 		shiftKey = (Fl::event_shift() > 0) ? 1 : 0;
+		theUniverse.drawProxyPath = (Fl::event_ctrl() > 0) ? false : true;
 
 		switch(Fl::event_key()) {
 		case '-':
@@ -1043,6 +1086,8 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	
 
 	timestep = (1.0/30.0)*10;
+	oldTimestep = timestep;
+	speedScale = 0.1;
 
 	forceGridSize = 51;
 	forceGridResolution = 0.25;
@@ -1098,7 +1143,7 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	helpWindow->hide();
 
 	// set textures
-	texture[0] = LoadTextureRAW( "earth.raw" );
+	//texture[0] = LoadTextureRAW( "earth.raw" );
 	//texture[1] = LoadTextureRAW( "asteroid.raw" );
 	//theUniverse.setTexture(texture[0], 0);
 	//theUniverse.setTexture(texture[1], 1);

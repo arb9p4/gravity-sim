@@ -61,7 +61,9 @@ double radius;
 
 bool selected;
 
+bool isOrigin;		//Is this the origin?
 bool isStatic;		//Is the object affected by other objects?
+bool collidable;	//Can other objects collide with this one?
 
 //History trail
 //std::deque<Point> trail;
@@ -82,6 +84,8 @@ Body(double x, double y, double z,
      double dx, double dy, double dz,
      double m);
 
+void initialize();
+
 //Stops all movement
 void stop();
 
@@ -92,6 +96,9 @@ void randVelocity();
 
 //Updates the velocity to reflect the force from another body
 double computeForce(Body &b, double timestep);
+
+//Applies the current forces and updates the trail history
+void applyForces(double timestep);
 
 //Draws the body
 void draw(bool showTrails);
