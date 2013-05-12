@@ -146,9 +146,9 @@ void GlWindow::initialize(int W,int H) {
 
 
 	texture[0] = LoadTextureRAW( "earth.raw" );
-	theUniverse.setTexture(texture[0], 0);
+	theUniverse.texture[0] = texture[0];
 	texture[1] = LoadTextureRAW( "asteroid.raw" );
-	theUniverse.setTexture(texture[1], 1);
+	theUniverse.texture[1] = texture[1];
 }
 
 double normalize(double x, double y, double z) {

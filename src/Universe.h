@@ -72,7 +72,6 @@ double computeForce(double x, double y, double z);
 
 //textures
 GLuint texture[2];
-void setTexture(GLuint texture, int i);
 
 void nextObject();
 

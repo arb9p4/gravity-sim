@@ -30,16 +30,19 @@ Universe::Universe() {
 void Universe::addObject() {
     objList.push_back(Body());
     objList.back().randVelocity();
+	objList.back().texture[0] = texture[0];
 }
 
 void Universe::addObject(double x, double y, double z) {
     objList.push_back(Body(x, y, z));
+	objList.back().texture[0] = texture[0];
 }
 
 void Universe::addObject(double x, double y, double z,
 			   double dx, double dy, double dz,
 			   double m) {
 	objList.push_back(Body(x,y,z,dx,dy,dz,m));
+	objList.back().texture[0] = texture[0];
 }
 
 //Add object in auto-computed orbit around a body
@@ -166,7 +169,7 @@ void Universe::draw(bool showTrails) {
     std::list<Body>::iterator it;
 	int i = 0;
     for(it = objList.begin(); it != objList.end(); ++it) {
-        (*it).draw(showTrails, texture[i++%2]);
+        (*it).draw(showTrails);
     }
 	i = 0;
 	//Draw proxy if necessary
@@ -181,7 +184,7 @@ void Universe::draw(bool showTrails) {
 		glVertex3f(proxyVector.X, proxy.Ypos, proxyVector.Z);
 		glVertex3f(proxyVector.X, proxyVector.Y, proxyVector.Z);
 		glEnd();
-		proxy.draw(showTrails, texture[i++%2]);
+		proxy.draw(showTrails);
 	}
 }
 
@@ -214,6 +217,7 @@ void Universe::createStars() {
 
 void Universe::setProxy(double x, double y, double z, double m) {
 	proxy = Body(x,y,z,0,0,0,m);
+	proxy.texture[0] = texture[0];
 	proxyVector.X = x;
 	proxyVector.Y = y;
 	proxyVector.Z = z;
@@ -288,10 +292,6 @@ double Universe::computeForce(double x, double y, double z) {
     }
 
 	return f;
-}
-
-void Universe::setTexture(GLuint texture1, int i) {
-	texture[i] = texture1;
 }
 
 void Universe::nextObject() {

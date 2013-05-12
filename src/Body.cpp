@@ -174,7 +174,7 @@ double Body::computeForce(Body &b, double timestep) {
 }
 
 //Draws the body
-void Body::draw(bool showTrails, GLuint texture) {
+void Body::draw(bool showTrails) {
 
     //Save current transformation
     glPushMatrix();
@@ -193,7 +193,7 @@ void Body::draw(bool showTrails, GLuint texture) {
     glRotatef(Xrot, 1.0, 0.0, 0.0);
     glRotatef(Zrot, 0.0, 0.0, 1.0);
 
-    drawShape(texture);
+    drawShape();
 
     //Body is represented as a sphere
 	//glColor3f(1.0, 1.0, 1.0);
@@ -206,7 +206,7 @@ void Body::draw(bool showTrails, GLuint texture) {
     glPopMatrix();
 }
 
-void Body::drawShape(GLuint texture) {
+void Body::drawShape() {
 
 	/*
 	glEnable(GL_LIGHTING);
@@ -218,7 +218,7 @@ void Body::drawShape(GLuint texture) {
 
 	glEnable(GL_LIGHTING);
 	GLUquadric *quad = gluNewQuadric();
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glRotatef(90,1.0f,0.0f,0.0f);
 	gluQuadricTexture(quad,1);
     gluSphere(quad,radius,20,16);
