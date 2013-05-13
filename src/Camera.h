@@ -35,6 +35,8 @@ class Camera
 		bool showForceGrid;	//Display the force grid
 		bool showTrails;	//True if trails should be drawn
 		bool showProxy;
+		
+		bool isStatic;
 
 		int cameraType;
 

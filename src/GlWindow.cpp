@@ -92,7 +92,14 @@ void animate(void* pData) {
 				pWindow->cam2.dy = b2.dYpos;
 				pWindow->cam2.dz = b2.dZpos;
 				
+				if (b2.isStatic) {
+					pWindow->cam2.isStatic = true;
+				} else {
+					pWindow->cam2.isStatic = false;
+				}
+
 				pWindow->cam2.camDist += (pWindow->cam2.camDistTarget - pWindow->cam2.camDist) * tweenRate;
+				
 			}
 			
 			// cam1 updates
@@ -141,15 +148,15 @@ void GlWindow::initialize(int W,int H) {
 	glEnable(GL_DEPTH_TEST);
 
 	glEnable( GL_TEXTURE_2D );
-	glDepthFunc(GL_LEQUAL);
+	//glDepthFunc(GL_LEQUAL);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 	glEnable(GL_CULL_FACE);
 
 
-	texture[0] = LoadTextureRAW( "earth.raw" );
+	texture[0] = LoadTextureRAW( "red.raw" );
 	theUniverse.texture[0] = texture[0];
-	texture[1] = LoadTextureRAW( "jupiter.raw" );
+	texture[1] = LoadTextureRAW( "earth.raw" );
 	theUniverse.texture[1] = texture[1];
 	texture[2] = LoadTextureRAW( "europa.raw" );
 	theUniverse.texture[2] = texture[2];
@@ -157,8 +164,10 @@ void GlWindow::initialize(int W,int H) {
 	theUniverse.texture[3] = texture[3];
 	texture[4] = LoadTextureRAW( "sunmap.raw" );
 	theUniverse.texture[4] = texture[4];
-	texture[5] = LoadTextureRAW( "red.raw" );
+	texture[5] = LoadTextureRAW( "jupiter.raw" );
 	theUniverse.texture[5] = texture[5];
+	
+	
 
 }
 
@@ -186,12 +195,20 @@ void GlWindow::displayMe(Camera camNew) {
 		case GlWindow::CHASE_CAM:
 			normalizedVector = normalize(camNew.dx, camNew.dy, camNew.dz);
 			normalizedVector += 0.000000000000000000000001;
-			gluLookAt(
-				camNew.camX - (camNew.dx/normalizedVector) * camNew.camDistTarget,
-				camNew.camY - (camNew.dy/normalizedVector) * camNew.camDistTarget,
-				camNew.camZ - (camNew.dz/normalizedVector) * camNew.camDistTarget,
-				camNew.camX, camNew.camY, camNew.camZ,
-				0, 1, 0);
+			if (camNew.isStatic) {
+				cout << "camera is static " << endl;
+				gluLookAt(
+					camNew.camX, camNew.camY, camNew.camZ+5.0,
+					camNew.camX, camNew.camY, camNew.camZ,
+					0, 1, 0);
+			} else {
+				gluLookAt(
+					camNew.camX - (camNew.dx/normalizedVector) * camNew.camDistTarget,
+					camNew.camY - (camNew.dy/normalizedVector) * camNew.camDistTarget,
+					camNew.camZ - (camNew.dz/normalizedVector) * camNew.camDistTarget,
+					camNew.camX, camNew.camY, camNew.camZ,
+					0, 1, 0);
+			}
 
 			// debug statement
 			//cout << camNew.camX - (camNew.dx/normalizedVector) * camNew.camDistTarget << ", " <<
@@ -469,11 +486,12 @@ void GlWindow::displayMe(Camera camNew) {
 		gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
 		gluUnProject( winX2, winY2, winZ2, modelview, projection, viewport, &posX2, &posY2, &posZ2);
 
+		theUniverse.updateProxyTexture(ctrlKey == 1);
 
 		if(addObj == 1) {
 
 			//Create proxy object
-			theUniverse.setProxy(posX,posY,posZ,1.0);
+			theUniverse.setProxy(posX,posY,posZ,1.0, ctrlKey == 1);
 			if(altKey > 0 && shiftKey > 0) {
 				theUniverse.proxy.isActor = true;
 				theUniverse.proxy.isTarget = false;

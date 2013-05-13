@@ -69,7 +69,7 @@ void clear();
 
 void createStars();
 
-void setProxy(double x, double y, double z, double m);
+void setProxy(double x, double y, double z, double m, bool isStatic);
 
 void setProxyVector(double x, double y, double z);
 
@@ -103,6 +103,9 @@ void addTargetFromActor();
 
 //Toggles the collidability of all targets
 void toggleTargetsActive();
+
+void setTexture();
+void Universe::updateProxyTexture(bool isStatic);
 
 };
 

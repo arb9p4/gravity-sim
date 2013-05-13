@@ -31,6 +31,8 @@ Camera::Camera()
 
 	camDist = 5.0;
 
+	isStatic = false;
+
 }
 
 void Camera::updateClipping(double fov1, double nearClip1, double farClip1) {

@@ -44,33 +44,48 @@ void Universe::clear() {
 void Universe::addObject() {
     objList.push_back(Body());
     objList.back().randVelocity();
-	objList.back().texture[0] = texture[i++%textureCount];
+	Universe::setTexture();
 }
 
 void Universe::addObject(Body b) {
 	objList.push_back(b);
-	objList.back().texture[0] = texture[i++%textureCount];
+	Universe::setTexture();
 }
 
 void Universe::addObject(double x, double y, double z) {
     objList.push_back(Body(x, y, z));
-	objList.back().texture[0] = texture[i++%textureCount];
+	Universe::setTexture();
 }
 
 void Universe::addObject(double x, double y, double z,
 			   double dx, double dy, double dz,
 			   double m) {
 	objList.push_back(Body(x,y,z,dx,dy,dz,m));
-	objList.back().texture[0] = texture[i++%textureCount];
+	Universe::setTexture();
+	
 }
 
 //Add object in auto-computed orbit around a body
 void Universe::addObject(double x, double y, double z,
 			   double m, Body* b) {
 
-	
-
 	//objList.push_back(Body(x,y,z,dx,dy,dz,m));
+}
+
+void Universe::setTexture() {
+	
+	if (objList.back().isStatic) {
+		cout << "set static texture" << endl;
+		objList.back().texture[0] = texture[0];
+	} else {
+		int temp = i%textureCount;
+		if (temp == 0) {
+			temp++;
+			i++;
+		}
+		i++;
+		objList.back().texture[0] = texture[temp];
+	}
 }
 
 int Universe::removeObject() {
@@ -325,13 +340,33 @@ void Universe::createStars() {
     }
 }
 
-void Universe::setProxy(double x, double y, double z, double m) {
+void Universe::setProxy(double x, double y, double z, double m, bool isStatic) {
 	proxy = Body(x,y,z,0,0,0,m);
-	proxy.texture[0] = texture[i%textureCount];
+	int temp = i%textureCount;
+	if (temp == 0) {
+		temp++;
+	}
+	if (isStatic) {
+		proxy.texture[0] = texture[0];
+	} else {
+		proxy.texture[0] = texture[temp];
+	}
 	proxyVector.X = x;
 	proxyVector.Y = y;
 	proxyVector.Z = z;
 	drawProxy = true;
+}
+
+void Universe::updateProxyTexture(bool isStatic) {
+	int temp = i%textureCount;
+	if (temp == 0) {
+		temp++;
+	}
+	if (isStatic) {
+		proxy.texture[0] = texture[0];
+	} else {
+		proxy.texture[0] = texture[temp];
+	}
 }
 
 void Universe::setProxyVector(double x, double y, double z) {

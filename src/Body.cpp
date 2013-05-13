@@ -264,10 +264,14 @@ void Body::drawShape() {
 	else {
 
 		spinrate+=2.0f;
+		if (spinrate>=360.0f) {
+			spinrate-=360.0f;
+		}
 
 		glEnable(GL_LIGHTING);
 		GLUquadric *quad = gluNewQuadric();
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		
 		glRotatef(90,1.0f,0.0f,0.0f);
 		glRotatef(spinrate, 0.0f,0.0f,1.0f);
 		gluQuadricTexture(quad,1);
