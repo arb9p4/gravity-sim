@@ -191,13 +191,7 @@ void Body::draw(bool showTrails) {
     //Save current transformation
     glPushMatrix();
 
-	if(showTrails && !isStatic)
-		drawHistory();
-	else {
-		//Clear the trail
-		trailIndex = 0;
-		trailLength = 0;;
-	}
+	
 
 	//Move object
     glTranslatef(Xpos, Ypos, Zpos);
@@ -216,6 +210,14 @@ void Body::draw(bool showTrails) {
 
     //Restore last transformation
     glPopMatrix();
+
+	if(showTrails && !isStatic)
+		drawHistory();
+	else {
+		//Clear the trail
+		trailIndex = 0;
+		trailLength = 0;;
+	}
 }
 
 void Body::drawShape() {
@@ -284,7 +286,7 @@ void Body::drawShape() {
 void Body::drawHistory() {
 
 	//Draw trail
-	glDepthMask(GL_FALSE);
+	//glDepthMask(GL_FALSE);
 	glBegin(GL_LINE_STRIP);
 	for(int i = 0; i < trailLength; ++i) {
 		int index = (trailIndex+i)%trail.size();
@@ -292,7 +294,7 @@ void Body::drawHistory() {
         glVertex3f(trail[index].X, trail[index].Y, trail[index].Z);
 	}
 	glEnd();
-	glDepthMask(GL_TRUE);
+	//glDepthMask(GL_TRUE);
 
 	/*
 	bool addPoint = false;
