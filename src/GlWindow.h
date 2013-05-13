@@ -56,7 +56,7 @@ public:
 	int keyW, keyS, keyA, keyD, keyR, keyF; //Translation keys
 	int keyQ, keyE, keyZ, keyX, keyC, keyV; //Roation keys
 	int keyT, keyG, keyB; //Scale keys
-	int shiftKey;
+	int shiftKey, altKey, ctrlKey;
 	int keyLBracket, keyRBracket;
 	int keyPlus, keyMinus;
 	int keyLeft, keyRight, keyUp, keyDown;
@@ -114,10 +114,12 @@ public:
 	void resetCamera();
 
 	//textures
-	GLuint texture[5];
-	GLuint GlWindow::LoadTextureRAW( const char * filename );
+	GLuint texture[6];
+	GLuint LoadTextureRAW( const char * filename );
 
 	void clear();
+
+	int numTargets;
 };
 
 #endif

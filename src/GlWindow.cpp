@@ -63,22 +63,23 @@ void animate(void* pData) {
 		pWindow->cam1.updateRotation(rotX, rotY, rotZ);
 		
 
-        pWindow->theUniverse.addTime(pWindow->timestep);
+        int collected = pWindow->theUniverse.addTime(pWindow->timestep);
+		pWindow->numTargets -= collected;
 
 		// simple check to see if there is a planet, then follows the first planet in the list.
 		//Tweening
 		double tweenRate = 0.5;
 		if (pWindow->theUniverse.objList.size() > 0) {
-			
-			Body body = pWindow->theUniverse.objList.front();
 
 			// only calculate the camera if its turned on
 			if (pWindow->showChaseCamera) {
 				// camera 2 updates
+				Body b2 = pWindow->theUniverse.getActor(); //Get actor
+
 				pWindow->cam2.setTarget(
-					body.Xpos,
-					body.Ypos,
-					body.Zpos
+					b2.Xpos,
+					b2.Ypos,
+					b2.Zpos
 				);
 				
 				pWindow->cam2.updateTranslation(
@@ -87,18 +88,19 @@ void animate(void* pData) {
 					(pWindow->cam2.camZtarget - pWindow->cam2.camZ) * tweenRate
 				);
 				
-				pWindow->cam2.dx = body.dXpos;
-				pWindow->cam2.dy = body.dYpos;
-				pWindow->cam2.dz = body.dZpos;
+				pWindow->cam2.dx = b2.dXpos;
+				pWindow->cam2.dy = b2.dYpos;
+				pWindow->cam2.dz = b2.dZpos;
 				
 				pWindow->cam2.camDist += (pWindow->cam2.camDistTarget - pWindow->cam2.camDist) * tweenRate;
 			}
 			
 			// cam1 updates
+			Body b1 = pWindow->theUniverse.objList.front(); //Get selection target
 			pWindow->cam1.setTarget(
-				body.Xpos,
-				body.Ypos,
-				body.Zpos
+				b1.Xpos,
+				b1.Ypos,
+				b1.Zpos
 			);
 			// update tweens
 			pWindow->cam1.updateTranslation(
@@ -380,12 +382,7 @@ void GlWindow::displayMe(Camera camNew) {
 
 	}
 
-	/* Turns out this may not be necessary after all, but could come in handy later
-
-	//Draw selectors
-	theUniverse.drawSelectors();
-
-	*/
+	
 
 	GLint viewport[4];                  // Where The Viewport Values Will Be Stored
 	glGetIntegerv(GL_VIEWPORT, viewport);           // Retrieves The Viewport Values (X, Y, Width, Height)
@@ -403,17 +400,24 @@ void GlWindow::displayMe(Camera camNew) {
 	theUniverse.draw(camNew.showTrails, speedScale);
 	
 
-	if(camNew.showGrid)
+	if(camNew.showGrid) {
 		glColor4f(0.3, 0.3, 0.4, 0.4);	//Give selection plane some transparency
-	else
-		glColor4f(0.3, 0.3, 0.4, 0.0);	//Make selection plane completely invisible
+		glBegin(GL_QUADS);
+			glVertex3f(-100, gridHeight, -100);
+			glVertex3f(-100, gridHeight, 100);
+			glVertex3f(100, gridHeight, 100);
+			glVertex3f(100, gridHeight, -100);
+			glVertex3f(-100, gridHeight, -100);
+			glVertex3f(100, gridHeight, -100);
+			glVertex3f(100, gridHeight, 100);
+			glVertex3f(-100, gridHeight, 100);
+		glEnd();
+	}
 
-	glBegin(GL_QUADS);
-		glVertex3f(-100, gridHeight, -100);
-		glVertex3f(-100, gridHeight, 100);
-		glVertex3f(100, gridHeight, 100);
-		glVertex3f(100, gridHeight, -100);
-	glEnd();
+
+	//Draw selectors
+	//theUniverse.drawSelectors();
+
 
 	if(updateFocus) {
 		//Get the screen coordinates of the mouse cursor
@@ -470,13 +474,33 @@ void GlWindow::displayMe(Camera camNew) {
 
 			//Create proxy object
 			theUniverse.setProxy(posX,posY,posZ,1.0);
+			if(altKey > 0 && shiftKey > 0) {
+				theUniverse.proxy.isActor = true;
+				theUniverse.proxy.isTarget = false;
+			}
+			else {
+				theUniverse.proxy.isActor = false;
+				theUniverse.proxy.isTarget = (altKey > 0);
+			}
+			
+
 			addObj = 2;
 
 		}
 		else if(addObj == 2) {
-			if(shiftKey) {
+			
+			if(shiftKey && altKey == 0) {
 				theUniverse.proxy.mass *= 1.1;
 				theUniverse.proxy.updateRadius();
+			}
+
+			if(altKey > 0 && shiftKey > 0) {
+				theUniverse.proxy.isActor = true;
+				theUniverse.proxy.isTarget = false;
+			}
+			else {
+				theUniverse.proxy.isActor = false;
+				theUniverse.proxy.isTarget = (altKey > 0);
 			}
 
 			//cout << winX2 << " " << winY2 << " " << winZ2 << endl;
@@ -510,10 +534,11 @@ void GlWindow::displayMe(Camera camNew) {
 		glColor3f(1.0, 1.0, 1.0);
 
 		char buffer[128];
-		int lineHeight = 12;
+		int lineHeight = 20;
 		int currentLine = lineHeight;
 
 		//Display camera coordinates
+		/*
 		sprintf(buffer, "Camera Position:");
 		printString(2, currentLine, buffer);
 
@@ -528,8 +553,9 @@ void GlWindow::displayMe(Camera camNew) {
 		currentLine += lineHeight;
 		sprintf(buffer, "FOV: %.2f   Near: %.2f   Far: %.2f", cam1.fov, cam1.nearClip, cam1.farClip);
 		printString(2, currentLine, buffer);
+		*/
 
-		currentLine += lineHeight;
+		//currentLine += lineHeight;
 		sprintf(buffer, "# of Objects: %i", theUniverse.objList.size()-1);
 		printString(2, currentLine, buffer);
 
@@ -537,6 +563,7 @@ void GlWindow::displayMe(Camera camNew) {
 		sprintf(buffer, "Simulation Speed: %.3f", timestep);
 		printString(2, currentLine, buffer);
 
+		/*
 		currentLine += lineHeight;
 		sprintf(buffer, "Click Point: %.0f %.0f", clickX, clickY);
 		printString(2, currentLine, buffer);
@@ -567,6 +594,11 @@ void GlWindow::displayMe(Camera camNew) {
 
 		currentLine += lineHeight;
 		sprintf(buffer, "PosX2 PosY2 PosZ2: %.1f %.1f %.1f", posX2, posY2, posZ2);
+		printString(2, currentLine, buffer);
+		*/
+
+		currentLine += lineHeight;
+		sprintf(buffer, "Targets Remaining: %d", numTargets);
 		printString(2, currentLine, buffer);
 	}
 }
@@ -606,7 +638,7 @@ void GlWindow::draw() {
 void GlWindow::printString(int x, int y, char* str) {
     glRasterPos2i(x, y);
     for (char *s = str; *s; s++)
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, *s);
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *s);
 
 }
 
@@ -735,9 +767,21 @@ int GlWindow::handle(int Fl_event) {
 			Body b(theUniverse.proxy.Xpos, theUniverse.proxy.Ypos, theUniverse.proxy.Zpos,
 				                  dx*speedScale, dy*speedScale, dz*speedScale, m);
 
-			if(Fl::event_ctrl()) {
-				b.isStatic = true;
-				b.stop();
+			if(Fl::event_shift() && Fl::event_alt()) {
+				b.isActor = true;
+				b.mass = 0.0;
+			}
+			else {
+				if(Fl::event_ctrl()) {
+					b.isStatic = true;
+					b.stop();
+				}
+
+				if(Fl::event_alt()) {
+					b.isTarget = true;
+					b.mass = 0.0;
+					numTargets++;
+				}
 			}
 
 			theUniverse.addObject(b);
@@ -764,6 +808,8 @@ int GlWindow::handle(int Fl_event) {
     //Handle key events
 	case FL_KEYDOWN:
 		shiftKey = (Fl::event_shift() > 0) ? 1 : 0;
+		altKey = (Fl::event_alt() > 0) ? 1 : 0;
+		ctrlKey = (Fl::event_ctrl() > 0) ? 1 : 0;
 		theUniverse.drawProxyPath = (Fl::event_ctrl() > 0) ? false : true;
 
 		switch(Fl::event_key()) {
@@ -875,7 +921,7 @@ int GlWindow::handle(int Fl_event) {
 
 		case FL_Delete:
 			//Delete current object
-			theUniverse.removeObject();
+			numTargets -= theUniverse.removeObject();
 			return 1;
 
         case ' ':
@@ -964,6 +1010,8 @@ int GlWindow::handle(int Fl_event) {
 
 	case FL_KEYUP:
 		shiftKey = (Fl::event_shift() > 0) ? 1 : 0;
+		altKey = (Fl::event_alt() > 0) ? 1 : 0;
+		ctrlKey = (Fl::event_ctrl() > 0) ? 1 : 0;
 		theUniverse.drawProxyPath = (Fl::event_ctrl() > 0) ? false : true;
 
 		switch(Fl::event_key()) {
@@ -1065,7 +1113,7 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	keyW = keyS = keyA = keyD = keyR = keyF = 0;
 	keyQ = keyE = keyZ = keyX = keyC = keyV = 0;
     keyT = keyG = keyB = 0;
-	shiftKey = 0;
+	shiftKey = altKey = ctrlKey = 0;
 	keyLBracket = keyRBracket = 0;
 	keyPlus = keyMinus = 0;
 
@@ -1102,47 +1150,65 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	cam2.showProxy = false;
 	showChaseCamera = false;
 
+	numTargets = 0;
+
     //Create initial timer
 	Fl::add_timeout(1.0/30.0, animate, this);
 
 	//Create and hide the help window
-	helpWindow = new Fl_Window(350,400,"Key Bindings");
-    disp = new Fl_Text_Display(0,0,350,400);
+	helpWindow = new Fl_Window(600,400,"Key Bindings");
+    disp = new Fl_Text_Display(0,0,600,400);
 	buff = new Fl_Text_Buffer();
     disp->buffer(buff);
 	disp->color(FL_BACKGROUND_COLOR);
-	buff->text("Move Camera:\n"
-			   "--------------------\n"
-			   "Left: A\n"
-			   "Right: D\n"
-			   "Forward: W\n"
-			   "Backward: S\n"
-			   "Up: R\n"
-			   "Down: F\n"
+	disp->textfont(FL_COURIER);
+	buff->text("--- Camera Controls ---\n"
+			   "Rotate Camera:            Drag with Left Mouse Button\n"
+			   "Zoom:                     Mouse Wheel\n"
+			   "Focus on Object:          Click with Left Mouse Button\n"
+			   "Focus on Next Object:     Right Arrow\n"
+			   "Focus on Previous Object: Left Arrow\n"
+			   "Set Origin as Focus:	  Home\n"
+			   "Delete Current Object:    Delete\n"
 			   "\n"
-			   "Rotate Camera:\n"
-			   "--------------------\n"
-			   "Yaw Left: Z or Drag Mouse Left\n"
-			   "Yaw Right: V or Drag Mouse Right\n"
-			   "Pitch Up: C or Drag Mouse Up\n"
-			   "Pitch Down: X or Drag Mouse Down\n"
-			   "Roll Clockwise: E\n"
-			   "Roll Counter-clockwise: Q\n"
+			   "Add Object:         Drag with Right Mouse Button\n"
+			   "Adjust Grid Height: Drag with Middle Mouse Button\n"
 			   "\n"
-			   "Adjust Clipping Planes:\n"
-			   "--------------------\n"
-			   "Increase FOV: +\n"
-			   "Decrease FOV: -\n"
-			   "Increase Far Clipping Plane: ]\n"
-			   "Decrease Far Clipping Plane: [\n"
-			   "Increase Near Clipping Plane: Shift + ]\n"
-			   "Decrease Near Clipping Plane: Shift + [\n"
+			   "--- While Adding Objects ---\n"
+			   "Adjust Vertical Trajectory: Drag with Left and Right Mouse Buttons\n"
+			   "Increase Mass:              Hold Shift\n"
+			   "Make Static:                Hold Control\n"
+			   "Make Static Target:         Hold Control + Alt\n"
+			   "Make Moving Target:         Hold Alt\n"
+			   "Make Actor:                 Hold Shift + Alt\n"
+			   "Cancel Adding Object:       Escape\n"
 			   "\n"
-			   "Other:\n"
-			   "--------------------\n"
-			   "Toggle Info: F3\n"
+			   "--- Other Controls ---\n"
+			   "Pause Simulation:               Pause\n"
+			   "Reverse Simulation:             Insert\n"
+			   "Decrease Speed:                 F1\n"
+			   "Increase Speed:                 F2\n"
+			   "Toggle Info:                    F3\n"
+			   "Toggle Grid:                    F4\n"
+			   "Toggle Force Grid:              F5\n"
+			   "Toggle Chase Camera:            F6\n"
+			   "Toggle Trail History:           F7\n"
+			   "Reset the Grid Height:          End\n"
+			   "Toggle Camera Type:             Tab\n"
+			   "Increase Force Grid Size:       Page Up\n"
+			   "Decrease Force Grid Size:       Page Down\n"
+			   "Increase Force Grid Resolution: Up\n"
+			   "Decrease Force Grid Resolution: Down\n"
+			   "Add Random Object:              Space\n"
+			   "Increase FOV:                   +\n"
+			   "Decrease FOV:                   -\n"
+			   "Increase Far Clipping Plane:    ]\n"
+			   "Decrease Far Clipping Plane:    [\n"
+			   "Increase Near Clipping Plane:   Shift + ]\n"
+			   "Decrease Near Clipping Plane:   Shift + [\n"
 			   );
 
+	helpWindow->resizable(disp);
 	helpWindow->hide();
 
 	// set textures
@@ -1181,6 +1247,7 @@ void GlWindow::clear() {
 	resetCamera();
 	gridHeight = 0.0;
 	timestep = (1.0/30.0)*10;
+	numTargets = 0;
 }
 
 GLuint GlWindow::LoadTextureRAW( const char * filename ) {

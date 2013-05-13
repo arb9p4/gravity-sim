@@ -73,7 +73,7 @@ class GravitySimApp {
 
 		//Get filename and create a new object
         if ( chooser.value() != NULL ) {
-			o->view->theUniverse.load(chooser.value());
+			o->view->numTargets =  o->view->theUniverse.load(chooser.value());
 		}	
     }
 
@@ -152,7 +152,7 @@ public:
         menu->add("Add/Two Objects", 0, addObjects, (void*)this);
 		menu->add("Add/Orbiting Objects", 0, addOrbit, (void*)this);
 		menu->add("Add/Disk", 0, addDisk, (void*)this);
-		menu->add("Add/Earth and Moon", 0, addEarthMoon, (void*)this);
+		//menu->add("Add/Earth and Moon", 0, addEarthMoon, (void*)this);
 		menu->add("Help/Key Bindings", 0, helpMenu, (void*)this);
 
         view = new GlWindow(0, 25, win->w(), win->h()-25);

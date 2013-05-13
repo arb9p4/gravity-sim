@@ -48,10 +48,11 @@ void addObject(double x, double y, double z,
 //Add object at position into orbit around specific body
 void addObject(double x, double y, double z, double m, Body* b);
 
-//Remove the current object
-void removeObject();
+//Remove the current object. Returns 1 if it was a target
+int removeObject();
 
-void addTime(double timestep);
+//Adds time to the simulation. Returns the number of targets collected
+int addTime(double timestep);
 
 //Reverses all velocities
 void reverse();
@@ -80,7 +81,7 @@ void selectObject(double x, double y, double z);
 double computeForce(double x, double y, double z);
 
 //textures
-GLuint texture[4];
+GLuint texture[6];
 
 void nextObject();
 
@@ -89,8 +90,11 @@ void previousObject();
 //Saves the objList to a file
 void save(const char* filename);
 
-//Loads the objList from a file
-void load(const char* filename);
+//Loads the objList from a file. Returns the number of target objects
+int load(const char* filename);
+
+//Returns the first actor in the scene
+Body getActor();
 
 };
 

@@ -65,6 +65,9 @@ bool isOrigin;		//Is this the origin?
 bool isStatic;		//Is the object affected by other objects?
 bool collidable;	//Can other objects collide with this one?
 
+bool isTarget;
+bool isActor;
+
 //History trail
 //std::deque<Point> trail;
 std::vector<Point> trail;
@@ -114,6 +117,9 @@ void drawSelector();
 // texture
 GLuint texture[1];
 float spinrate;
+
+//Orients the body to point in the direction of travel
+void orientBody();
 
 };
 #endif

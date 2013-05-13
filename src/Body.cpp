@@ -25,7 +25,7 @@ using namespace std;
 //Constructor to place a body at a random location
 Body::Body() {
 
-    double maxDist = 10.0;
+    double maxDist = 100.0;
 
     //Set initial position
     Xpos = ((double)rand()/(double)RAND_MAX - 0.5)*2*maxDist;
@@ -35,7 +35,7 @@ Body::Body() {
     Yrot = 0.0;
     Zrot = 0.0;
 
-    mass = 1.0;
+    mass = (double)rand()/(double)RAND_MAX * 100.0;
 
 	initialize();
 
@@ -98,6 +98,9 @@ void Body::initialize() {
 	isOrigin = false;
 	isStatic = false;
 	collidable = true;
+
+	isTarget = false;
+	isActor = false;
 
 	trail.resize(INITIAL_TRAIL_LENGTH, Point());
 	trailAlpha.clear();
@@ -217,25 +220,51 @@ void Body::draw(bool showTrails) {
 
 void Body::drawShape() {
 
-	/*
-	glEnable(GL_LIGHTING);
-    //glColor3f(1.0, 0.0, 1.0);
-	glRotatef(90.0, 1.0, 0.0, 0.0);
-    glutSolidSphere(radius, 20, 16);
-	glDisable(GL_LIGHTING);
-	*/
+	if(isTarget) {
+		
+		glEnable(GL_LIGHTING);
+		glRotatef(90.0, 1.0, 0.0, 0.0);
+		glRotatef(spinrate, 0.0, 0.0, 1.0);
+		glScalef(0.5,0.5,0.5);
+		glutSolidOctahedron();
+		glDisable(GL_LIGHTING);
 
-	spinrate+=2.0f;
+		spinrate += 5.0f;
 
-	glEnable(GL_LIGHTING);
-	GLUquadric *quad = gluNewQuadric();
-	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glRotatef(90,1.0f,0.0f,0.0f);
-	glRotatef(spinrate, 0.0f,0.0f,1.0f);
-	gluQuadricTexture(quad,1);
-    gluSphere(quad,radius,20,16);
-	glDisable(GL_LIGHTING);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	else if(isActor) {
+		glEnable(GL_LIGHTING);
+
+		double rotY = -atan2(dZpos,dXpos) * 180.0 / PI;
+		double len = sqrt(dXpos*dXpos + dZpos*dZpos);
+		double rotZ = atan2(dYpos,len) * 180.0 / PI;
+
+		glRotatef(rotY, 0.0, 1.0, 0.0);
+		//glRotatef(rotX, 1.0, 0.0, 0.0);
+		glRotatef(rotZ, 0.0, 0.0, 1.0);
+
+		glScalef(1.0,0.5,0.5);
+		glutSolidTetrahedron();
+
+		
+
+		glDisable(GL_LIGHTING);
+	}
+	else {
+
+		spinrate+=2.0f;
+
+		glEnable(GL_LIGHTING);
+		GLUquadric *quad = gluNewQuadric();
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		glRotatef(90,1.0f,0.0f,0.0f);
+		glRotatef(spinrate, 0.0f,0.0f,1.0f);
+		gluQuadricTexture(quad,1);
+		gluSphere(quad,radius,20,16);
+		glDisable(GL_LIGHTING);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+	}
 
 }
 
@@ -292,6 +321,9 @@ void Body::drawHistory() {
 
 
 void Body::drawSelector() {
+	
+	glDepthMask(GL_FALSE);
+	
 	//Save current transformation
     glPushMatrix();
 
@@ -305,8 +337,19 @@ void Body::drawSelector() {
     //Body is represented as a sphere
 	glColor4f(1.0, 1.0, 1.0, 0.5);
 	glRotatef(90.0, 1.0, 0.0, 0.0);
+	
 	glutSolidSphere(radius*0.75, 20, 16);
+	
 
     //Restore last transformation
     glPopMatrix();
+
+	glDepthMask(GL_TRUE);
+}
+
+void Body::orientBody() {
+
+	Zrot = atan2(dYpos,dXpos) * 180.0 / PI;
+	Yrot = atan2(dZpos,dXpos) * 180.0 / PI;
+
 }
