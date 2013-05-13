@@ -69,6 +69,7 @@ public:
 	double clickX, clickY;		//Clicked point
 	double clickX2, clickY2;	//Clicked point
 	int mouseButton;			//Which mouse button was last clicked
+	bool mouseMoved;			//True if mouse was moved since starting to add object
 	int addObj;					//0: not adding; 1: clicked; 2: released
 	double vectorHeight;		//Vertical vector component when adding objects
 	double gridHeight;			//Height of the grid for adding objects

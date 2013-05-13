@@ -28,6 +28,8 @@ Point proxyVector;
 bool drawProxy;
 bool drawProxyPath;
 
+bool targetsActive;
+
 Universe();
 
 //Add object at random location
@@ -95,6 +97,12 @@ int load(const char* filename);
 
 //Returns the first actor in the scene
 Body getActor();
+
+//Adds a target at the current actor position
+void addTargetFromActor();
+
+//Toggles the collidability of all targets
+void toggleTargetsActive();
 
 };
 

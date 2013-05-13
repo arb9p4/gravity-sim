@@ -651,6 +651,7 @@ void GlWindow::resize(int X, int Y, int W, int H) {
 
 //Handle input events
 int GlWindow::handle(int Fl_event) {
+	
 	switch(Fl_event) {
 
 	//Handle mouse events
@@ -686,10 +687,17 @@ int GlWindow::handle(int Fl_event) {
 			if(addObj > 0) {
 
 				//Adding object
+				mouseMoved = true;
 
 				if(Fl::event_button1()) {
 					//Add vertical vector component
 					vectorHeight += (cursorY2 - cursorY) * 0.05;
+
+				}
+				else if(Fl::event_button2()) {
+					//Rotate camera
+					mouseX = Fl::event_x();
+					mouseY = Fl::event_y();
 
 				}
 				else {
@@ -730,7 +738,10 @@ int GlWindow::handle(int Fl_event) {
 		case FL_MIDDLE_MOUSE:
 			//cout << "Push Middle Mouse" << endl;
 
-			
+			mouseX = Fl::event_x();
+			mouseY = Fl::event_y();
+			mouseX2 = mouseX;
+			mouseY2 = mouseY;
 
 			return 1;
 
@@ -744,7 +755,7 @@ int GlWindow::handle(int Fl_event) {
 
 			vectorHeight = 0.0;
 			mouseButton = 2;
-
+			mouseMoved = false;
 			
 			addObj = 1;
 			
@@ -758,9 +769,16 @@ int GlWindow::handle(int Fl_event) {
 		if(addObj == 2 && Fl::event_button() == FL_RIGHT_MOUSE) {
 		//if(addObj == 2) {
 
-			double dx = theUniverse.proxyVector.X - theUniverse.proxy.Xpos;
-			double dy = theUniverse.proxyVector.Y - theUniverse.proxy.Ypos;
-			double dz = theUniverse.proxyVector.Z - theUniverse.proxy.Zpos;
+			double dx, dy, dz;
+
+			if(mouseMoved) {
+				dx = theUniverse.proxyVector.X - theUniverse.proxy.Xpos;
+				dy = theUniverse.proxyVector.Y - theUniverse.proxy.Ypos;
+				dz = theUniverse.proxyVector.Z - theUniverse.proxy.Zpos;
+			}
+			else {
+				dx = dy = dz = 0.0;
+			}
 
 			double m = theUniverse.proxy.mass;
 
@@ -851,6 +869,11 @@ int GlWindow::handle(int Fl_event) {
 			cam2.showTrails = !cam2.showTrails;
 			return 1;
 
+		case FL_F+8:
+			//Toggle target collidability
+			theUniverse.toggleTargetsActive();
+			return 1;
+
 		case FL_Home:
 			//Set the origin as the focus
 			theUniverse.selectObject(0,0,0);
@@ -922,6 +945,16 @@ int GlWindow::handle(int Fl_event) {
 		case FL_Delete:
 			//Delete current object
 			numTargets -= theUniverse.removeObject();
+			return 1;
+
+		case FL_Enter:
+			//Add a target at the current actor position
+
+			
+			numTargets++;
+
+			theUniverse.addTargetFromActor();
+
 			return 1;
 
         case ' ':
@@ -1125,6 +1158,7 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 	clickX = clickY = 0.0;
 	clickX2 = clickY2 = 0.0;
 	mouseButton = 1;
+	mouseMoved = false;
 	addObj = 0;
 	vectorHeight = 0.0;
 	gridHeight = 0.0;
@@ -1171,11 +1205,13 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 			   "Set Origin as Focus:	  Home\n"
 			   "Delete Current Object:    Delete\n"
 			   "\n"
-			   "Add Object:         Drag with Right Mouse Button\n"
-			   "Adjust Grid Height: Drag with Middle Mouse Button\n"
+			   "Add Object:                      Drag with Right Mouse Button\n"
+			   "Adjust Grid Height:              Drag with Middle Mouse Button\n"
+			   "Add Target Behind Current Actor: Enter\n"
 			   "\n"
 			   "--- While Adding Objects ---\n"
 			   "Adjust Vertical Trajectory: Drag with Left and Right Mouse Buttons\n"
+			   "Rotate Camera:              Drag with Middle Mouse Button\n"
 			   "Increase Mass:              Hold Shift\n"
 			   "Make Static:                Hold Control\n"
 			   "Make Static Target:         Hold Control + Alt\n"
@@ -1193,6 +1229,7 @@ GlWindow::GlWindow(int X,int Y,int W,int H,const char*L) : Fl_Gl_Window(X,Y,W,H,
 			   "Toggle Force Grid:              F5\n"
 			   "Toggle Chase Camera:            F6\n"
 			   "Toggle Trail History:           F7\n"
+			   "Toggle Targets Active:          F8\n"
 			   "Reset the Grid Height:          End\n"
 			   "Toggle Camera Type:             Tab\n"
 			   "Increase Force Grid Size:       Page Up\n"

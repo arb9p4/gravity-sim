@@ -222,12 +222,23 @@ void Body::drawShape() {
 
 	if(isTarget) {
 		
-		glEnable(GL_LIGHTING);
-		glRotatef(90.0, 1.0, 0.0, 0.0);
-		glRotatef(spinrate, 0.0, 0.0, 1.0);
-		glScalef(0.5,0.5,0.5);
-		glutSolidOctahedron();
-		glDisable(GL_LIGHTING);
+		if(collidable) {
+
+			glEnable(GL_LIGHTING);
+			glRotatef(90.0, 1.0, 0.0, 0.0);
+			glRotatef(spinrate, 0.0, 0.0, 1.0);
+			glScalef(0.5,0.5,0.5);
+			glutSolidOctahedron();
+			glDisable(GL_LIGHTING);
+
+		}
+		else {
+			glColor4f(1.0, 1.0, 1.0, 0.5);
+			glRotatef(90.0, 1.0, 0.0, 0.0);
+			glRotatef(spinrate, 0.0, 0.0, 1.0);
+			glScalef(0.5,0.5,0.5);
+			glutSolidOctahedron();
+		}
 
 		spinrate += 5.0f;
 

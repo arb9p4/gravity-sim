@@ -26,6 +26,7 @@ int i = 0;
 Universe::Universe() {
 	drawProxy = false;
 	drawProxyPath = true;
+	targetsActive = false;
 	createStars();
 	clear();
 }
@@ -126,8 +127,12 @@ int Universe::addTime(double timestep) {
 							}
 						}
 						else if((*it2).isTarget) {
-							noMerges = true;
-							continue;	//Otherwise, ignore targets
+							//Moving target collides with a body that is not an actor
+							objList.erase(it2);	//Remove the target
+							collected++;
+
+							//noMerges = true;
+							//continue;	//Ignore target
 						}
 						else {
 							//Erase the non-static object
@@ -417,6 +422,8 @@ void Universe::previousObject() {
 void Universe::save(const char* filename) {
 	cout << "Writing to " << filename << endl;
 
+	selectObject(0,0,0);
+
 	std::ofstream file(filename);
 	if(file.is_open()) {
 
@@ -556,4 +563,32 @@ Body Universe::getActor() {
 		return objList.front();
 	else
 		return Body();
+}
+
+void Universe::addTargetFromActor() {
+	Body b = getActor();
+
+	//Move back a little so it doesn't immediatley cause a collision
+	double u = sqrt(b.dXpos*b.dXpos + b.dYpos*b.dYpos + b.dZpos*b.dZpos)/1.5;
+	b.Xpos -= b.dXpos/u;
+	b.Ypos -= b.dYpos/u;
+	b.Zpos -= b.dZpos/u;
+	b.stop();
+	b.collidable = false;
+	b.isStatic = true;
+	b.isActor = false;
+	b.isTarget = true;
+
+	addObject(b);
+}
+
+void Universe::toggleTargetsActive() {
+	
+	targetsActive = !targetsActive;
+	
+	std::list<Body>::iterator it;
+    for(it = objList.begin(); it != objList.end(); ++it) {
+		if((*it).isTarget)
+			(*it).collidable = targetsActive;
+	}
 }
