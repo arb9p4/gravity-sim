@@ -86,6 +86,12 @@ void nextObject();
 
 void previousObject();
 
+//Saves the objList to a file
+void save(const char* filename);
+
+//Loads the objList from a file
+void load(const char* filename);
+
 };
 
 #endif

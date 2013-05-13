@@ -738,7 +738,6 @@ int GlWindow::handle(int Fl_event) {
 			if(Fl::event_ctrl()) {
 				b.isStatic = true;
 				b.stop();
-				
 			}
 
 			theUniverse.addObject(b);

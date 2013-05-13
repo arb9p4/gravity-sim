@@ -15,6 +15,8 @@
 #include <cmath>
 #include "Universe.h"
 #include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -360,4 +362,119 @@ void Universe::previousObject() {
 	Body b = objList.back();
 	objList.pop_back();
 	objList.push_front(b);
+}
+
+void Universe::save(const char* filename) {
+	cout << "Writing to " << filename << endl;
+
+	std::ofstream file(filename);
+	if(file.is_open()) {
+
+		std::list<Body>::iterator it = objList.begin();
+		while(++it != objList.end()) {
+
+			file << (*it).Xpos << ",";
+			file << (*it).Ypos << ",";
+			file << (*it).Zpos << ",";
+			file << (*it).Xrot << ",";
+			file << (*it).Yrot << ",";
+			file << (*it).Zrot << ",";
+			file << (*it).dXpos << ",";
+			file << (*it).dYpos << ",";
+			file << (*it).dZpos << ",";
+			file << (*it).dXrot << ",";
+			file << (*it).dYrot << ",";
+			file << (*it).dZrot << ",";
+			file << (*it).mass << ",";
+			file << (*it).selected << ",";
+			file << (*it).isOrigin << ",";
+			file << (*it).isStatic << ",";
+			file << (*it).collidable << "\n";
+
+		}
+
+		file.close();
+	}
+}
+
+/**************************************************************************************************
+Tokenize a string into a vector
+Inputs: str - Input string to be tokenized
+		tokens - Vector of string tokens for output
+		delimiters - String of delimiter characters
+**************************************************************************************************/
+void Tokenize(const string &str, vector<string> &tokens, const string &delimiters) {
+
+	//Skip delimiters at beginning
+	string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+
+	//Find first "non-delimiter"
+	string::size_type pos = str.find_first_of(delimiters, lastPos);
+
+	while(string::npos != pos || string::npos != lastPos) {
+
+		//Found a token, add it to the vector
+		tokens.push_back(str.substr(lastPos, pos - lastPos));
+
+		//Skip delimiters
+		lastPos = str.find_first_not_of(delimiters, pos);
+
+		//Find next "non-delimiter"
+		pos = str.find_first_of(delimiters, lastPos);
+	}
+}
+
+void Universe::load(const char* filename) {
+	cout << "Loading from " << filename << endl;
+
+	std::ifstream file(filename);
+	if(file.is_open()) {
+
+		clear();
+
+		while(!file.eof()) {
+
+			string line;
+			vector<string> tokens;
+			getline(file, line);
+			Tokenize(line, tokens, ",");
+
+			if(tokens.size() == 17) {
+
+				double Xpos = atof(tokens[0].c_str());
+				double Ypos = atof(tokens[1].c_str());
+				double Zpos = atof(tokens[2].c_str());
+				double Xrot = atof(tokens[3].c_str());
+				double Yrot = atof(tokens[4].c_str());
+				double Zrot = atof(tokens[5].c_str());
+				double dXpos = atof(tokens[6].c_str());
+				double dYpos = atof(tokens[7].c_str());
+				double dZpos = atof(tokens[8].c_str());
+				double dXrot = atof(tokens[9].c_str());
+				double dYrot = atof(tokens[10].c_str());
+				double dZrot = atof(tokens[11].c_str());
+				double mass = atof(tokens[12].c_str());
+				bool selected = (atoi(tokens[13].c_str()) > 0);
+				bool isOrigin = (atoi(tokens[14].c_str()) > 0);
+				bool isStatic = (atoi(tokens[15].c_str()) > 0);
+				bool collidable = (atoi(tokens[16].c_str()) > 0);
+
+				Body b(Xpos,Ypos,Zpos,dXpos,dYpos,dZpos,mass);
+				b.Xrot = Xrot;
+				b.Yrot = Yrot;
+				b.Zrot = Zrot;
+				b.dXrot = dXrot;
+				b.dYrot = dYrot;
+				b.dZrot = dZrot;
+				b.selected = selected;
+				b.isOrigin = isOrigin;
+				b.isStatic = isStatic;
+				b.collidable = collidable;
+
+				objList.push_back(b);
+			}
+		}
+
+		file.close();
+	}
 }

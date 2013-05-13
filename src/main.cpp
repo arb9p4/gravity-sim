@@ -13,6 +13,7 @@
 #include <FL/glu.h>
 #include <FL/glut.H>
 #include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_File_Chooser.H>
 #include <cstdlib>
 #include <cmath>
 #include "GlWindow.h"
@@ -30,6 +31,50 @@ class GravitySimApp {
 	//Quit the program
     static void quitProgram(Fl_Widget *w, void *data) {
         exit(0);
+    }
+
+	//Clear all objects in the scene
+	static void saveScene(Fl_Widget *w, void *data) {
+        GravitySimApp *o = (GravitySimApp*)data;
+        
+		//Create the file chooser, and show it
+        Fl_File_Chooser chooser(".",                        // directory
+								 "",                    // filter
+								Fl_File_Chooser::CREATE,    // chooser type
+								 "Save As...");           // title
+        chooser.preview(0);
+		chooser.show();
+
+        //Block until user picks something.
+        while(chooser.shown())
+            { Fl::wait(); }
+
+		//Get filename and create a new object
+        if ( chooser.value() != NULL ) {
+			o->view->theUniverse.save(chooser.value());
+		}	
+    }
+
+	//Clear all objects in the scene
+	static void loadScene(Fl_Widget *w, void *data) {
+        GravitySimApp *o = (GravitySimApp*)data;
+        
+		//Create the file chooser, and show it
+        Fl_File_Chooser chooser(".",                        // directory
+								 "",                    // filter
+								Fl_File_Chooser::SINGLE,    // chooser type
+								 "Load...");           // title
+        chooser.preview(0);
+		chooser.show();
+
+        //Block until user picks something.
+        while(chooser.shown())
+            { Fl::wait(); }
+
+		//Get filename and create a new object
+        if ( chooser.value() != NULL ) {
+			o->view->theUniverse.load(chooser.value());
+		}	
     }
 
 	//Clear all objects in the scene
@@ -100,6 +145,8 @@ public:
         win = new Fl_Window(1280, 800, "Gravity Simulator");
 
 		menu = new Fl_Menu_Bar(0, 0, win->w(), 25);
+		menu->add("File/Load", 0, loadScene, (void*)this);
+		menu->add("File/Save", 0, saveScene, (void*)this);
 		menu->add("File/Clear", 0, clearScene, (void*)this);
         menu->add("File/Quit", 0, quitProgram, 0);
         menu->add("Add/Two Objects", 0, addObjects, (void*)this);
