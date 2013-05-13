@@ -73,6 +73,7 @@ class GravitySimApp {
 
 		//Get filename and create a new object
         if ( chooser.value() != NULL ) {
+			o->view->clear();
 			o->view->numTargets =  o->view->theUniverse.load(chooser.value());
 		}	
     }
