@@ -99,7 +99,7 @@ int load(const char* filename);
 Body getActor();
 
 //Adds a target at the current actor position
-void addTargetFromActor();
+int addTargetFromActor();
 
 //Toggles the collidability of all targets
 void toggleTargetsActive();

@@ -600,21 +600,28 @@ Body Universe::getActor() {
 		return Body();
 }
 
-void Universe::addTargetFromActor() {
+int Universe::addTargetFromActor() {
 	Body b = getActor();
 
-	//Move back a little so it doesn't immediatley cause a collision
-	double u = sqrt(b.dXpos*b.dXpos + b.dYpos*b.dYpos + b.dZpos*b.dZpos)/1.5;
-	b.Xpos -= b.dXpos/u;
-	b.Ypos -= b.dYpos/u;
-	b.Zpos -= b.dZpos/u;
-	b.stop();
-	b.collidable = false;
-	b.isStatic = true;
-	b.isActor = false;
-	b.isTarget = true;
+	if(b.isActor) {
 
-	addObject(b);
+		//Move back a little so it doesn't immediatley cause a collision
+		double u = sqrt(b.dXpos*b.dXpos + b.dYpos*b.dYpos + b.dZpos*b.dZpos)/1.5;
+		b.Xpos -= b.dXpos/u;
+		b.Ypos -= b.dYpos/u;
+		b.Zpos -= b.dZpos/u;
+		b.stop();
+		b.collidable = false;
+		b.isStatic = true;
+		b.isActor = false;
+		b.isTarget = true;
+
+		addObject(b);
+		return 1;
+	}
+
+	return 0;
+
 }
 
 void Universe::toggleTargetsActive() {

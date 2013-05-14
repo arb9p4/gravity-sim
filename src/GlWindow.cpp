@@ -968,10 +968,7 @@ int GlWindow::handle(int Fl_event) {
 		case FL_Enter:
 			//Add a target at the current actor position
 
-			
-			numTargets++;
-
-			theUniverse.addTargetFromActor();
+			numTargets += theUniverse.addTargetFromActor();
 
 			return 1;
 
