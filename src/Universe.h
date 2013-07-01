@@ -105,7 +105,7 @@ int addTargetFromActor();
 void toggleTargetsActive();
 
 void setTexture();
-void Universe::updateProxyTexture(bool isStatic);
+void updateProxyTexture(bool isStatic);
 
 };
 
